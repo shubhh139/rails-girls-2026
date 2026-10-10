@@ -4,7 +4,7 @@ Oct 10, 2026 · Vishwajeetsingh Desurkar
 
 Five modules, one per attendee, each with three build tasks and one explain task, sized for 2.5 hours of build time.
 
-See also: [PRD.md](PRD.md) for scope and data model, and [TASKS.md](TASKS.md) for the full task list including mentor tasks.
+See also: [MVC_GUIDE.md](MVC_GUIDE.md) to understand models, views and controllers before you start, [PRD.md](PRD.md) for scope and data model, and [TASKS.md](TASKS.md) for the full task list including mentor tasks.
 
 ## Before you start
 

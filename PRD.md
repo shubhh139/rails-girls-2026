@@ -4,7 +4,7 @@ Oct 10, 2026 · Vishwajeetsingh Desurkar
 
 A Rails 8 app where people register as blood donors, post blood requests, and donors respond to matching requests, built in one Rails Girls day by 5 attendees and 2 mentors using AI tools.
 
-See also: [ATTENDEE_TASKS.md](ATTENDEE_TASKS.md) for the five modules, and [TASKS.md](TASKS.md) for the full task list.
+See also: [ATTENDEE_TASKS.md](ATTENDEE_TASKS.md) for the five modules, [TASKS.md](TASKS.md) for the full task list, and [MVC_GUIDE.md](MVC_GUIDE.md) for how a Rails app is organised.
 
 ## Goals
 

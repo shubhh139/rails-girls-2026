@@ -2,7 +2,7 @@
 
 Every task for the session, mentors included. Time blocks are hours:minutes from the start of build time.
 
-See also: [PRD.md](PRD.md) and [ATTENDEE_TASKS.md](ATTENDEE_TASKS.md).
+See also: [PRD.md](PRD.md), [ATTENDEE_TASKS.md](ATTENDEE_TASKS.md) and [MVC_GUIDE.md](MVC_GUIDE.md).
 
 - **Who:** Attendee = she builds it herself with AI help; Attendee + mentor = a mentor sits with her; Mentor = mentor builds it.
 - **If behind:** Cut first = drop it at the 1:30 checkpoint if not started; Mentor takes over = mentor builds it while the attendee watches and explains it back; Keep = attendee finishes it.
