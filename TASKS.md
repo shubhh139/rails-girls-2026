@@ -13,12 +13,12 @@ See also: [PRD.md](PRD.md), [ATTENDEE_TASKS.md](ATTENDEE_TASKS.md) and [MVC_GUID
 
 | ID | Owner | Task | Who | Depends on | Time | Done when | If behind |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| P1 | Mentor 1 | Create Rails 8 app, push to GitHub, add all 7 collaborators | Mentor |  | Before the day | Everyone can clone and run bin/dev | Keep |
-| P2 | Mentor 1 | Run authentication generator and add sign-up page | Mentor | P1 | Before the day | A new user can sign up, log in and log out | Keep |
-| P3 | Mentor 2 | Add layout, nav bar, home page with demo disclaimer; add routes and a controller with empty actions for each module | Mentor | P1 | Before the day | Home page loads; nobody needs to edit config/routes.rb | Keep |
-| P4 | Mentor 2 | Add BLOOD_GROUPS constant and CITIES list | Mentor | P1 | Before the day | Both lists usable in any model or form | Keep |
-| W1 | Mentor 1 | Create all three tables (donor_profiles, blood_requests, responses) live on the projector, explaining each column; everyone pulls and migrates | Mentor | P2, P4 | 0:00 - 0:20 | Every attendee has all three tables locally and can name the columns her module uses | Keep |
-| P5 | Mentor 2 | Write seed data: 15 donors, 6 requests | Mentor | W1 | 0:20 - 1:30 | bin/rails db:seed fills every screen | Keep |
+| P1 | Mentor 1 | Create Rails 8 app, push to GitHub, add all 7 collaborators; optionally enable Minitest before P2 (see specs/README.md, mentor checklist) | Mentor |  | Before the day | Everyone can clone and run bin/dev | Keep |
+| P2 | Mentor 1 | Run authentication generator; add a sign-up page that collects name (UsersController, view, `resources :users, only: [ :new, :create ]`); add `validates :name, presence: true` to User | Mentor | P1 | Before the day | A new user can sign up with a name, log in and log out | Keep |
+| P3 | Mentor 2 | Add layout that prints `notice` and `alert` (remove the auth generator's duplicate flash markup in the sessions and passwords views, and remove `flex` from `<main>`), HomeController for the root page, nav bar (Become a donor, Donors, Requests, Request blood, Log out), home page with demo disclaimer; add the routes from specs/README.md and controllers with empty actions for each module | Mentor | P1 | Before the day | Home page loads; flash shows once; nobody needs to edit config/routes.rb | Keep |
+| P4 | Mentor 2 | Add BLOOD_GROUPS constant and CITIES list in `config/initializers/constants.rb` | Mentor | P1 | Before the day | Both lists usable in any model or form | Keep |
+| W1 | Mentor 1 | Create all three tables (donor_profiles, blood_requests, responses) live on the projector, explaining each column; add the `User` associations from DB_SCHEMA.md; everyone pulls and migrates | Mentor | P2, P4 | 0:00 - 0:20 | Every attendee has all three tables locally and can name the columns her module uses | Keep |
+| P5 | Mentor 2 | Write seed data: 15 named donors (a couple with available false), 6 requests with future dates, some sharing blood group and city with donors so matching donors shows results; made-up phones only | Mentor | W1 | 0:20 - 1:30 | bin/rails db:seed fills every screen | Keep |
 
 ## A. Donor profile
 
@@ -33,7 +33,7 @@ See also: [PRD.md](PRD.md), [ATTENDEE_TASKS.md](ATTENDEE_TASKS.md) and [MVC_GUID
 
 | ID | Owner | Task | Who | Depends on | Time | Done when | If behind |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| B1 | Attendee 2 | Create donors list page showing name, blood group and city | Attendee | W1 | 0:20 - 1:30 | Donors appear; no phone numbers shown | Keep |
+| B1 | Attendee 2 | Create donors list page showing every available donor's name, blood group and city | Attendee | W1 | 0:20 - 1:30 | Donors appear; no phone numbers shown | Keep |
 | B2 | Attendee 2 | Add blood group filter dropdown | Attendee | B1 | 0:20 - 1:30 | Choosing O+ shows only O+ donors | Keep |
 | B3 | Attendee 2 | Add city filter, combined with blood group | Attendee | B2 | 0:20 - 1:30 | Both filters work together | Cut first |
 | B4 | Attendee 2 | Explain the query and view to a mentor | Attendee | B1, B2 | 2:10 - 2:30 | Mentor signs off | Keep |
@@ -60,7 +60,7 @@ See also: [PRD.md](PRD.md), [ATTENDEE_TASKS.md](ATTENDEE_TASKS.md) and [MVC_GUID
 
 | ID | Owner | Task | Who | Depends on | Time | Done when | If behind |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| E1 | Attendee 5 | Add Response model rules: belongs to a request and a donor, one response per donor per request | Attendee + mentor | W1 | 0:20 - 1:30 | A response can be created in the console; a duplicate is rejected | Keep |
+| E1 | Attendee 5 | Add Response model rules: belongs to a request and a donor, one response per donor per request; the request's owner cannot respond | Attendee + mentor | W1 | 0:20 - 1:30 | A response can be created in the console; a duplicate is rejected | Keep |
 | E2 | Attendee 5 | Add I can help button on the request page | Attendee | E1 | 0:20 - 1:30 | Button works as a partial; added to the request page once Module C merges | Keep |
 | E3 | Attendee 5 | Show responses list with donor name and phone, visible only to the request's creator | Attendee + mentor | E2 | 0:20 - 1:30 | Creator sees responders; other users do not | Mentor takes over |
 | E4 | Attendee 5 | Explain model and rules to a mentor | Attendee | E1, E2 | 2:10 - 2:30 | Mentor signs off | Keep |

@@ -227,7 +227,11 @@ There are two ERB tags, and mixing them up is the most common beginner bug:
   <p>Note: <%= @blood_request.note %></p>
 <% end %>
 
-<%# Module D and E add their partials below this line %>
+<%# ===== Modules D and E: add your render lines below. Do not edit above this line. ===== %>
+<%# Module D: render "blood_requests/matching_donors", blood_request: @blood_request %>
+<%# Module E: render "responses/button", blood_request: @blood_request %>
+<%# Module E: render "responses/list", blood_request: @blood_request %>
+<%# ===== end of shared spot ===== %>
 ```
 
 And a list page loops over a collection:
@@ -236,10 +240,10 @@ And a list page loops over a collection:
 <%# app/views/blood_requests/index.html.erb %>
 <h1>Open requests</h1>
 
-<% @blood_requests.each do |request| %>
+<% @blood_requests.each do |blood_request| %>
   <p>
-    <%= link_to "#{request.blood_group} · #{request.units_needed} units · #{request.hospital}, #{request.city}",
-                request %>
+    <%= link_to "#{blood_request.blood_group} · #{blood_request.units_needed} units · #{blood_request.hospital}, #{blood_request.city}",
+                blood_request %>
   </p>
 <% end %>
 ```
@@ -250,8 +254,8 @@ And a list page loops over a collection:
 
 ```erb
 <%# app/views/blood_requests/_form.html.erb %>
-<%= form_with model: @blood_request do |f| %>
-  <% @blood_request.errors.full_messages.each do |message| %>
+<%= form_with model: blood_request do |f| %>
+  <% blood_request.errors.full_messages.each do |message| %>
     <p class="error"><%= message %></p>
   <% end %>
 
@@ -267,6 +271,8 @@ And a list page loops over a collection:
 <% end %>
 ```
 
+The form is a partial, so it gets the request as a local: `new.html.erb` renders it with `<%= render "form", blood_request: @blood_request %>`.
+
 ### Partials
 
 A file whose name starts with `_` is a **partial**: a reusable piece of a page. `_form.html.erb` can be shared by `new` and `edit`. Modules D and E build their sections as partials so they can drop them into Module C's request page without editing the same lines:
@@ -275,6 +281,8 @@ A file whose name starts with `_` is a **partial**: a reusable piece of a page. 
 <%= render "blood_requests/matching_donors", blood_request: @blood_request %>
 <%= render "responses/list", blood_request: @blood_request %>
 ```
+
+These partials are an exception to "no queries in views" below: each runs one short query on its `blood_request` local, because the request page's `show` action belongs to Module C and editing it would cause merge conflicts. Prefer a named model method (`DonorProfile.matching(blood_request)`), and do not let an AI move these queries into `show`.
 
 ### The layout
 
@@ -331,12 +339,12 @@ Notice that the **form never talks to the database directly**, and **the model n
 | D. Requests list | uses `BloodRequest` (read only) | `BloodRequestsController#index` with a filter | `blood_requests/index`, `_matching_donors` |
 | E. Responses | `Response` associations and uniqueness | `ResponsesController#create` | `responses/_button`, `_list` |
 
-Modules B and D do not write any model code. A filter is a controller reading `params[:blood_group]` and asking the model for matching rows:
+Module B writes no model code; Module D adds one model method in D3, with a mentor. A filter is a controller reading `params[:blood_group]` and asking the model for matching rows:
 
 ```ruby
 # Module B: app/controllers/donors_controller.rb
 def index
-  @donors = DonorProfile.includes(:user)
+  @donors = DonorProfile.includes(:user).where(available: true)
   @donors = @donors.where(blood_group: params[:blood_group]) if params[:blood_group].present?
 end
 ```
@@ -361,7 +369,7 @@ Cover the right-hand column and try each one.
 | Only show requests for the blood group the user picked | Controller: read `params[:blood_group]`, call `.where` on the model |
 | Stop a donor from responding twice | Model: `validates :donor_id, uniqueness: { scope: :blood_request_id }` (the database index is a second safety net) |
 | Send the user to the request page after saving | Controller: `redirect_to @blood_request` |
-| Hide the responses list from everyone except the request's creator | View decides what to show (`<% if @blood_request.user == Current.user %>`); a mentor helps with this in Module E |
+| Hide the responses list from everyone except the request's creator | View decides what to show (`<% if blood_request.user == Current.user %>` in the `_list` partial); a mentor helps with this in Module E |
 | Add a new URL | Routes, and today that means asking a mentor |
 | Add a new column | A migration, and today that means asking a mentor |
 
@@ -398,7 +406,7 @@ Asking your AI tool in MVC terms gets you much better code:
 
 - Name the layer: "In the **model** `app/models/response.rb`, add a validation so..." rather than "make it so you can't respond twice".
 - One layer at a time: model first, test it in the console, then controller, then view.
-- After it answers, ask: "Which part of this is model, controller and view, and why is each piece there?" If code is in the wrong layer (a query inside a view, HTML inside a model), ask it to move it.
+- After it answers, ask: "Which part of this is model, controller and view, and why is each piece there?" If code is in the wrong layer (a query inside a view, HTML inside a model), ask it to move it. The one exception is the D and E partials on the request page (see [Partials](#partials)).
 
 ## Glossary
 

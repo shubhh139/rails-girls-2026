@@ -4,7 +4,7 @@ Oct 10, 2026 · Vishwajeetsingh Desurkar
 
 Five modules, one per attendee, each with three build tasks and one explain task, sized for 2.5 hours of build time.
 
-See also: [MVC_GUIDE.md](MVC_GUIDE.md) to understand models, views and controllers before you start, [PRD.md](PRD.md) for scope and data model, and [TASKS.md](TASKS.md) for the full task list including mentor tasks.
+See also: [MVC_GUIDE.md](MVC_GUIDE.md) to understand models, views and controllers before you start, [specs/](specs/README.md) for the tech spec of each module, [PRD.md](PRD.md) for scope and data model, and [TASKS.md](TASKS.md) for the full task list including mentor tasks.
 
 ## Before you start
 
@@ -47,18 +47,22 @@ You build the form where a signed-in user becomes a donor. Owner: Attendee 1. St
 
 **Files you own:** `app/models/donor_profile.rb`, `app/controllers/donor_profiles_controller.rb`, `app/views/donor_profiles/`
 
+**Tech spec:** [specs/module-a-donor-profile.md](specs/module-a-donor-profile.md)
+
 **Done when:** a new user can sign up, fill the form and see her profile saved, and a form with a missing phone shows an error.
 
 ## Module B: Donor directory
 
 You build the page where anyone signed in can find donors by blood group. Owner: Attendee 2. Start at 0:20.
 
-- [ ] **B1. Donors list.** Build a page listing every donor's name, blood group and city. Do not show phone numbers.
+- [ ] **B1. Donors list.** Build a page listing every available donor's name, blood group and city. Do not show phone numbers.
 - [ ] **B2. Blood group filter.** Add a dropdown above the list. Choosing O+ shows only O+ donors; choosing nothing shows everyone.
 - [ ] **B3. City filter (cut first if behind).** Add a second dropdown that works together with the blood group filter.
 - [ ] **B4. Explain it.** Walk a mentor through your query and view.
 
 **Files you own:** `app/controllers/donors_controller.rb`, `app/views/donors/`
+
+**Tech spec:** [specs/module-b-donor-directory.md](specs/module-b-donor-directory.md)
 
 **Done when:** the list shows donors, the filter narrows it correctly, and no phone number appears anywhere on the page.
 
@@ -75,9 +79,11 @@ You build the form and page for posting a blood request. Owner: Attendee 3. Star
 
 **Files you own:** `app/models/blood_request.rb`, the `new`, `create` and `show` actions in `app/controllers/blood_requests_controller.rb`, and `app/views/blood_requests/new.html.erb`, `_form.html.erb` and `show.html.erb`
 
+**Tech spec:** [specs/module-c-blood-requests.md](specs/module-c-blood-requests.md)
+
 **Done when:** a signed-in user can post a request and see it on its own page, and a form with units left blank shows an error.
 
-Modules D and E each add one line to your request page near the end. Leave a clearly marked spot at the bottom for them.
+Modules D and E add their sections to your request page near the end (D one line, E two). Leave a clearly marked spot at the bottom for them, and do not uncomment their lines yourself.
 
 ## Module D: Requests list
 
@@ -88,7 +94,9 @@ You build the page donors open first: the list of blood requests. Owner: Attende
 - [ ] **D3. Matching donors (with a mentor, cut first if behind).** On the request page, list donors with the same blood group and city as the request. Name and city only, no phone.
 - [ ] **D4. Explain it.** Walk a mentor through your query and view.
 
-**Files you own:** the `index` action in `app/controllers/blood_requests_controller.rb`, `app/views/blood_requests/index.html.erb` and `_matching_donors.html.erb`
+**Files you own:** the `index` action in `app/controllers/blood_requests_controller.rb`, `app/views/blood_requests/index.html.erb` and `_matching_donors.html.erb` (plus the one `DonorProfile.matching` method in `app/models/donor_profile.rb`, added with a mentor)
+
+**Tech spec:** [specs/module-d-requests-list.md](specs/module-d-requests-list.md)
 
 **Done when:** the list shows requests newest first, the filter works, and clicking a row opens that request.
 
@@ -100,12 +108,14 @@ Until seed data is merged, create two or three requests yourself in `bin/rails c
 
 You build the step that connects the two sides: a donor saying "I can help". This is the hardest module. Owner: Attendee 5. Start at 0:20.
 
-- [ ] **E1. Response model rules (with a mentor).** The table already exists. In the model, say that a response belongs to a blood request and to a donor (a user), and that a donor can respond to the same request only once.
+- [ ] **E1. Response model rules (with a mentor).** The table already exists. In the model, say that a response belongs to a blood request and to a donor (a user), that a donor can respond to the same request only once, and that the request's owner cannot respond to her own request.
 - [ ] **E2. "I can help" button.** Add a button to the request page. Clicking it creates a response for the logged-in user and shows a confirmation.
-- [ ] **E3. Responses list (mentor takes over if behind).** On the request page, list each responder's name and phone. Only the person who created the request can see this list.
+- [ ] **E3. Responses list (with a mentor; mentor takes over if behind).** On the request page, list each responder's name and phone. Only the person who created the request can see this list.
 - [ ] **E4. Explain it.** Walk a mentor through your model and the "only the creator sees it" rule.
 
 **Files you own:** `app/models/response.rb`, `app/controllers/responses_controller.rb`, `app/views/responses/`
+
+**Tech spec:** [specs/module-e-responses.md](specs/module-e-responses.md)
 
 **Done when:** a donor can click the button once, a second click is refused, and the request's creator sees the donor's name and phone while a different user does not.
 
