@@ -1,6 +1,5 @@
 class PagesController < ApplicationController
-  # After the authentication generator runs, uncomment this so signed-out visitors can see these pages:
-  # allow_unauthenticated_access
+  allow_unauthenticated_access
 
   def home
   end

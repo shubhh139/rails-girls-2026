@@ -107,7 +107,7 @@ Written by mentors in `config/routes.rb` (`resources :donors, only: [ :index ]`)
 | GET | `/donors?blood_group=O%2B` | `donors#index` | `donors_path(blood_group: "O+")` | Same action, filtered by blood group |
 | GET | `/donors?blood_group=O%2B&city=Pune` | `donors#index` | `donors_path(blood_group: "O+", city: "Pune")` | Same action, both filters (B3) |
 
-All three are the **same route**. The query string is not part of the route; it only fills `params`. Login is required automatically by the `Authentication` concern in `ApplicationController`.
+All three are the **same route**. The query string is not part of the route; it only fills `params`. Login is required automatically by the app's login check in `ApplicationController` (mentors built it).
 
 ## Files you own
 
@@ -305,7 +305,7 @@ end
 | --- | --- | --- |
 | Phone on the list | Anyone signed in could harvest donor phones | The view never calls `donor.phone`; `includes(:user)` only loads users, and the view prints only `name` |
 | Email on the list | Same as phone | Never printed |
-| Signed-out visitor opens `/donors` | Public list of donors | `Authentication` concern redirects to login |
+| Signed-out visitor opens `/donors` | Public list of donors | The app's login check in `ApplicationController` redirects to login |
 | Donor set "available" off | Requester calls someone who said no | `.where(available: true)` hides them |
 | No donors at all, or no match | Blank, confusing page | `if @donors.present?` shows the `empty-state` box: "No donors match this filter." and a "Clear filter" link |
 | Someone types `?blood_group=O+` by hand | `+` is read as a space, so the value is `"O "` and nothing matches | Use the dropdown; the browser sends `O%2B`. The empty state shows, nothing breaks |
@@ -324,36 +324,6 @@ end
 8. Refresh after filtering, then press Back: the filter survives, no "resubmit form?" warning (it is a GET).
 9. The page matches screen 5 of [UI_DESIGN.md](../UI_DESIGN.md#5-donors-list-module-b): one `<h1 class="page-title">Donors</h1>`, a `filter-bar` with visible "Blood group" (and "City") labels and a Filter button, cards with a blood group `badge` and the city in `meta`, and the `empty-state` box when nothing matches. View source shows no Tailwind classes and no `style=` attributes.
 10. After seeds are merged (`bin/rails db:seed`): about 15 donors across groups and cities appear, and filtering still works.
-
-> Needs test setup by a mentor: this app was created without the test framework (`config/application.rb` has `rails/test_unit/railtie` commented out and there is no `test/` folder). Skip this if a mentor has not set it up.
-
-Optional Minitest test. `sign_in_as(user)` comes from the Rails 8.1 authentication generator's test helper (`test/test_helpers/session_test_helper.rb`):
-
-```ruby
-# test/controllers/donors_controller_test.rb
-require "test_helper"
-
-class DonorsControllerTest < ActionDispatch::IntegrationTest
-  test "filters by blood group and hides phone" do
-    user = User.create!(name: "Asha", email_address: "asha@test.com", password: "password123")
-    user.create_donor_profile!(blood_group: "O+", city: "Pune", phone: "9000000001")
-    sign_in_as(user)
-
-    get donors_path(blood_group: "A+")
-    assert_select ".card", count: 0
-    assert_select ".empty-state", text: /No donors match this filter/
-
-    get donors_path(blood_group: "O+")
-    assert_select ".card", text: /Asha/
-    assert_select ".card .badge", text: "O+"
-    assert_no_match "9000000001", response.body
-  end
-end
-```
-
-Run it with `bin/rails test test/controllers/donors_controller_test.rb`. If fixtures clash, ask a mentor; the manual checklist is what counts today.
-
-If every test fails with "uninitialized constant Donor" or "Missing model class Donor", Module E's `class_name: "User"` is not merged yet; ask a mentor.
 
 ## Working with other modules
 

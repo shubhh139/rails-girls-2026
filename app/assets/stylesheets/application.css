@@ -120,6 +120,28 @@ button {
   outline-color: #ffffff;
 }
 
+/* "Log out" is a button (it changes data), styled like the other nav links */
+.site-nav form {
+  display: inline;
+}
+
+.nav-button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nav-button:hover {
+  text-decoration: underline;
+}
+
+.nav-button:focus-visible {
+  outline-color: #ffffff;
+}
+
 .site-name {
   font-size: var(--text-h2);
   margin-right: auto;

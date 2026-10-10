@@ -379,7 +379,7 @@ r.user                   # => the first user
 | Situation | What happens | Handled by |
 | --- | --- | --- |
 | Someone adds `user_id=1` to the form data | Ignored: not in strong params; owner comes from `Current.user` | `blood_request_params`, `create` |
-| Signed-out visitor opens `/blood_requests/new` | Sent to the login page | `Authentication` concern (mentors) |
+| Signed-out visitor opens `/blood_requests/new` | Sent to the login page | The app's login check in `ApplicationController` (mentors) |
 | Blood group typed as "Z+" via a crafted request | Rejected with an error | `inclusion` validation |
 | Units blank, 0, -2 or 1.5 | Rejected with an error | `numericality` validation |
 | Id that does not exist | 404 Not found | `find` |
@@ -398,27 +398,8 @@ Use only made-up names and phone numbers, for example `9000000001`.
 4. Fill everything correctly. Expected: `/blood_requests/<id>` with "Request posted." and the request details.
 5. Check the request page against the top of screen 7: blood group badge, "2 units needed for ..." heading, hospital and city line, "Needed by 12 Oct 2026" style date, note only if you typed one. Expected: no phone number anywhere on the page.
 6. Refresh. Expected: notice gone, no second request created (`BloodRequest.count` unchanged).
-7. Log out, log in as a different user, open the same URL. Expected: page still shows the same details, and still no phone number.
+7. In a second browser or a private window, log in as a different seeded user (for example donor1@example.com, password "password") and open the same URL. Expected: page still shows the same details, and still no phone number.
 8. Open `/blood_requests/99999`. Expected: Not found.
-
-> Needs test setup by a mentor: this app was created without the test framework (`config/application.rb` has `rails/test_unit/railtie` commented out and there is no `test/` folder). Skip this if a mentor has not set it up.
-
-Optional model test (run with `bin/rails test test/models/blood_request_test.rb`):
-
-```ruby
-# test/models/blood_request_test.rb
-require "test_helper"
-
-class BloodRequestTest < ActiveSupport::TestCase
-  test "units needed must be at least 1" do
-    request = BloodRequest.new(units_needed: 0)
-    assert_not request.valid?
-    assert_includes request.errors[:units_needed], "must be greater than or equal to 1"
-  end
-end
-```
-
-If every test fails with "uninitialized constant Donor" or "Missing model class Donor", Module E's `class_name: "User"` is not merged yet; ask a mentor.
 
 ## Working with other modules
 
