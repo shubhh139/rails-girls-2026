@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 class DonorProfile < ApplicationRecord
   belongs_to :user
 
@@ -11,8 +10,3 @@ class DonorProfile < ApplicationRecord
   validates :phone, presence: true
   validates :user_id, uniqueness: true
 end
-=======
-class DonorProfile < ApplicationRecord
-  belongs_to :user
-end
->>>>>>> main
