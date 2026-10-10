@@ -22,3 +22,7 @@ Things you may want to cover:
 * Deployment instructions
 
 * ...
+=======
+# AppStack – Admin & Dashboard Template
+Thanks for buying. Navigate to `docs/docs-installation.html` to get started.
+# rails-girls-2026
