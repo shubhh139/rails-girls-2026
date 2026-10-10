@@ -4,7 +4,7 @@ Oct 10, 2026 · Vishwajeetsingh Desurkar
 
 Five modules, one per attendee, each with three build tasks and one explain task, sized for 2.5 hours of build time.
 
-See also: [MVC_GUIDE.md](MVC_GUIDE.md) to understand models, views and controllers before you start, [specs/](specs/README.md) for the tech spec of each module, [PRD.md](PRD.md) for scope and data model, and [TASKS.md](TASKS.md) for the full task list including mentor tasks.
+See also: [MVC_GUIDE.md](MVC_GUIDE.md) to understand models, views and controllers before you start, [specs/](specs/README.md) for the tech spec of each module, [UI_DESIGN.md](UI_DESIGN.md) for what each screen looks like and the CSS classes to use, [PRD.md](PRD.md) for scope and data model, and [TASKS.md](TASKS.md) for the full task list including mentor tasks.
 
 ## Before you start
 
@@ -32,6 +32,7 @@ You start from a working app with login. Once the database tables are done in th
 - Ask your AI tool for one small step at a time, and paste your task text into the prompt so it uses the right names.
 - Before you accept generated code, ask the AI to explain it line by line until you could explain it yourself.
 - No new gems. If the AI suggests Devise, Pundit or Ransack, say no.
+- No new CSS. Use only the classes listed in UI_DESIGN.md; if the AI adds Tailwind classes or inline styles, ask it to use those classes instead.
 - Use made-up names and phone numbers only.
 
 Nobody creates a migration after 0:20. If you think you need a new column, ask a mentor, who adds it for everyone.

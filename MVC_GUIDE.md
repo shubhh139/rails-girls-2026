@@ -2,7 +2,7 @@
 
 A beginner's guide to how a Rails app is organised, using the app we are building today. Read it before you start your module, and come back to it whenever you are unsure where a piece of code belongs.
 
-See also: [PRD.md](PRD.md) for what we are building, [DB_SCHEMA.md](DB_SCHEMA.md) for the tables, and [ATTENDEE_TASKS.md](ATTENDEE_TASKS.md) for your module.
+See also: [PRD.md](PRD.md) for what we are building, [DB_SCHEMA.md](DB_SCHEMA.md) for the tables, [ATTENDEE_TASKS.md](ATTENDEE_TASKS.md) for your module, and [UI_DESIGN.md](UI_DESIGN.md) for the CSS classes your views use.
 
 ## MVC in one minute
 
@@ -228,9 +228,9 @@ There are two ERB tags, and mixing them up is the most common beginner bug:
 <% end %>
 
 <%# ===== Modules D and E: add your render lines below. Do not edit above this line. ===== %>
-<%# Module D: render "blood_requests/matching_donors", blood_request: @blood_request %>
 <%# Module E: render "responses/button", blood_request: @blood_request %>
 <%# Module E: render "responses/list", blood_request: @blood_request %>
+<%# Module D: render "blood_requests/matching_donors", blood_request: @blood_request %>
 <%# ===== end of shared spot ===== %>
 ```
 
@@ -255,19 +255,29 @@ And a list page loops over a collection:
 ```erb
 <%# app/views/blood_requests/_form.html.erb %>
 <%= form_with model: blood_request do |f| %>
-  <% blood_request.errors.full_messages.each do |message| %>
-    <p class="error"><%= message %></p>
+  <% if blood_request.errors.any? %>
+    <div class="form-errors">
+      <ul>
+        <% blood_request.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
   <% end %>
 
-  <%= f.label :blood_group %>
-  <%= f.select :blood_group, BLOOD_GROUPS, include_blank: "Choose…" %>
+  <div class="form-field">
+    <%= f.label :blood_group %>
+    <%= f.select :blood_group, BLOOD_GROUPS, include_blank: "Select" %>
+  </div>
 
-  <%= f.label :units_needed %>
-  <%= f.number_field :units_needed, min: 1 %>
+  <div class="form-field">
+    <%= f.label :units_needed %>
+    <%= f.number_field :units_needed, min: 1 %>
+  </div>
 
   <%# ...the other fields... %>
 
-  <%= f.submit "Post request" %>
+  <%= f.submit "Post request", class: "btn btn-primary" %>
 <% end %>
 ```
 
@@ -287,6 +297,10 @@ These partials are an exception to "no queries in views" below: each runs one sh
 ### The layout
 
 `app/views/layouts/application.html.erb` wraps every page. The `<%= yield %>` inside it is where your view's HTML is inserted. The nav bar lives there, so you do not repeat it on every page.
+
+### Styling
+
+You do not write CSS today. A mentor has written one shared stylesheet, and your views just use its class names: `page-title` for the one `<h1>`, `card` and `card-list` for lists, `badge` for a blood group, `form-field` and `form-errors` in forms, `btn btn-primary` for the main button. In ERB, pass a class to a helper with `class:`, as in `<%= f.submit "Post request", class: "btn btn-primary" %>`. The full list, and a sketch of every screen, is in [UI_DESIGN.md](UI_DESIGN.md).
 
 What belongs in a view: displaying data, links, forms, simple `if`s about what to show. What does **not**: database queries (`BloodRequest.where(...)` in a view is a smell; the controller should prepare the data) or rules about data (model).
 

@@ -4,7 +4,7 @@ Five tables. `users` and `sessions` come from the Rails 8 authentication generat
 
 After that, `db/schema.rb` is the source of truth. If this file and `db/schema.rb` disagree, `db/schema.rb` is right and this file needs updating.
 
-See also: [PRD.md](PRD.md), [ATTENDEE_TASKS.md](ATTENDEE_TASKS.md), [TASKS.md](TASKS.md), [MVC_GUIDE.md](MVC_GUIDE.md).
+See also: [PRD.md](PRD.md), [ATTENDEE_TASKS.md](ATTENDEE_TASKS.md), [TASKS.md](TASKS.md), [MVC_GUIDE.md](MVC_GUIDE.md), [UI_DESIGN.md](UI_DESIGN.md).
 
 ## Diagram
 

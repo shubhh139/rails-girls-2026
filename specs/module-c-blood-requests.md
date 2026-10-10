@@ -4,7 +4,7 @@ Oct 10, 2026 · Vishwajeetsingh Desurkar
 
 You build the `BloodRequest` model rules, the "Request blood" form and the page that shows one request, so a signed-in user can ask for blood and land on a page that others can open.
 
-See also: [../ATTENDEE_TASKS.md](../ATTENDEE_TASKS.md) for your task list, [../MVC_GUIDE.md](../MVC_GUIDE.md) for MVC basics (it uses your module as its main example), and [../DB_SCHEMA.md](../DB_SCHEMA.md) for the table.
+See also: [../ATTENDEE_TASKS.md](../ATTENDEE_TASKS.md) for your task list, [../MVC_GUIDE.md](../MVC_GUIDE.md) for MVC basics (it uses your module as its main example), [../DB_SCHEMA.md](../DB_SCHEMA.md) for the table, and [../UI_DESIGN.md](../UI_DESIGN.md) for how your pages look and which CSS classes to use.
 
 ## What you are building
 
@@ -13,9 +13,53 @@ From the user's point of view:
 1. A signed-in user clicks **Request blood** in the nav bar and gets a form (`/blood_requests/new`).
 2. They fill in patient name, blood group (dropdown), units needed, hospital, city (dropdown), needed-by date, contact phone and an optional note, then click **Post request**.
 3. If something is missing, the same form comes back with the typed values kept and a list of errors at the top.
-4. If everything is fine, they land on the request page (`/blood_requests/7`) with a "Request posted." message and all the details.
+4. If everything is fine, they land on the request page (`/blood_requests/7`) with a "Request posted." message and the request details.
 
-The request page is the centre of the app. Donors reach it from Module D's list, Module D shows matching donors on it, and Module E adds the "I can help" button and the responses list to it.
+The request page is the centre of the app. Donors reach it from Module D's list, Module E adds the "I can help" button and the responses list to it, and Module D shows matching donors under those.
+
+Your two pages are screens 6 and 7 in [UI_DESIGN.md](../UI_DESIGN.md#screens). Build them to match these wireframes, using only the component classes listed there (`page-title`, `card`, `card-list`, `btn`, `btn btn-primary`, `form-field`, `form-errors`, `filter-bar`, `badge`, `meta`, `empty-state`). No Tailwind, no inline styles, no new CSS. The mentor's layout already provides the `.container` width, the nav, the footer and the flash message, so your pages start straight with their `<h1>`.
+
+[Screen 6. Request blood](../UI_DESIGN.md#6-request-blood-module-c) (`new.html.erb`):
+
+```
+  Request blood
+
+  [form errors, if any]
+
+  Patient name    [______________]
+  Blood group     [ Select  v ]
+  Units needed    [ 1 ]
+  Hospital        [______________]
+  City            [ Select  v ]
+  Needed by       [ dd / mm / yyyy ]
+  Contact phone   [______________]
+  Note (optional) [______________]
+                  [______________]
+
+  [ Post request ]
+```
+
+[Screen 7. Request page](../UI_DESIGN.md#7-request-page-module-c-with-d-and-e) (`show.html.erb`; you build the top part and leave the spot for E and D):
+
+```
+  [B+]  2 units needed for Ravi Patil
+  Sahyadri Hospital, Pune
+  Needed by 12 Oct 2026
+  Note: Surgery scheduled for Monday morning.
+
+  ------------------------------------------------
+  [ I can help ]                          <- Module E
+  ------------------------------------------------
+  Responses (2)                           <- Module E, creator only
+    Asha Kulkarni    98xxxxxx01
+    Meera Joshi      98xxxxxx02
+  ------------------------------------------------
+  Matching donors (3)                     <- Module D, cut first
+    Asha Kulkarni    Pune
+    Neha Shah        Pune
+```
+
+Notice what is not on screen 7: the requester's contact phone. UI_DESIGN's rule is "Phones appear only in a request's responses list, to its creator." See the C3 decision below.
 
 In the demo journey you own **step 3**: "As a second user, post a blood request." Steps 4 and 5 happen on the page you build.
 
@@ -24,8 +68,12 @@ In the demo journey you own **step 3**: "As a second user, post a blood request.
 - [ ] **C1.** `BloodRequest.new.valid?` returns `false` in the console, and `errors.full_messages` lists every required field. A request with `units_needed: 0` is rejected.
 - [ ] **C2.** A signed-in user can fill the form and save a request, and the saved request's `user` is that logged-in user.
 - [ ] **C2.** Submitting with units left blank shows an error on the form, and the other typed values are still there.
-- [ ] **C3.** After saving, the browser lands on `/blood_requests/:id` showing every field and the "Request posted." notice.
-- [ ] **C3.** The bottom of `show.html.erb` has a clearly marked spot for Modules D and E.
+- [ ] **C2.** The form page matches screen 6 of UI_DESIGN.md: one `<h1 class="page-title">` "Request blood", fields in the screen's order, each in a `form-field`, errors in one `form-errors` box, and one `btn btn-primary` "Post request" button.
+- [ ] **C3.** After saving, the browser lands on `/blood_requests/:id` showing the request details and the "Request posted." notice.
+- [ ] **C3.** The request page matches the top of screen 7: blood group `badge`, units and patient name in the `page-title`, hospital and city in a `meta` line, the needed-by date, and the note only if there is one.
+- [ ] **C3.** The requester's `contact_phone` does not appear anywhere on the request page.
+- [ ] **C3.** The bottom of `show.html.erb` has a clearly marked spot for Modules E and D, in screen 7's order.
+- [ ] **C2, C3.** Your views use only UI_DESIGN.md component classes: no Tailwind classes, no inline styles, no wrapper `div` for width.
 - [ ] **C4.** You have explained your model, controller and views to a mentor.
 
 ## Concepts you will use
@@ -198,56 +246,91 @@ r.user                   # => the first user
 
 ```erb
 <%# app/views/blood_requests/new.html.erb %>
-<div class="w-full max-w-xl">
-  <h1 class="text-2xl font-bold mb-4">Request blood</h1>
-  <%= render "form", blood_request: @blood_request %>
-</div>
+<h1 class="page-title">Request blood</h1>
+<%= render "form", blood_request: @blood_request %>
 ```
 
 ```erb
 <%# app/views/blood_requests/_form.html.erb %>
-<%= form_with model: blood_request, class: "space-y-3" do |f| %>
+<%= form_with model: blood_request do |f| %>
   <% if blood_request.errors.any? %>
-    <ul class="text-red-700">
-      <% blood_request.errors.full_messages.each do |message| %>
-        <li><%= message %></li>
-      <% end %>
-    </ul>
+    <div class="form-errors">
+      <ul>
+        <% blood_request.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
   <% end %>
 
-  <div><%= f.label :patient_name %> <%= f.text_field :patient_name, class: "border p-1 w-full" %></div>
-  <div><%= f.label :blood_group %> <%= f.select :blood_group, BLOOD_GROUPS, include_blank: "Choose…" %></div>
-  <div><%= f.label :units_needed %> <%= f.number_field :units_needed, min: 1, class: "border p-1" %></div>
-  <div><%= f.label :hospital %> <%= f.text_field :hospital, class: "border p-1 w-full" %></div>
-  <div><%= f.label :city %> <%= f.select :city, CITIES, include_blank: "Choose…" %></div>
-  <div><%= f.label :needed_by %> <%= f.date_field :needed_by, class: "border p-1" %></div>
-  <div><%= f.label :contact_phone %> <%= f.telephone_field :contact_phone, class: "border p-1" %></div>
-  <div><%= f.label :note, "Note (optional)" %> <%= f.text_area :note, rows: 3, class: "border p-1 w-full" %></div>
+  <div class="form-field">
+    <%= f.label :patient_name %>
+    <%= f.text_field :patient_name %>
+  </div>
 
-  <%= f.submit "Post request", class: "bg-red-600 text-white px-4 py-2 rounded" %>
+  <div class="form-field">
+    <%= f.label :blood_group %>
+    <%= f.select :blood_group, BLOOD_GROUPS, include_blank: "Choose…" %>
+  </div>
+
+  <div class="form-field">
+    <%= f.label :units_needed %>
+    <%= f.number_field :units_needed, min: 1 %>
+  </div>
+
+  <div class="form-field">
+    <%= f.label :hospital %>
+    <%= f.text_field :hospital %>
+  </div>
+
+  <div class="form-field">
+    <%= f.label :city %>
+    <%= f.select :city, CITIES, include_blank: "Choose…" %>
+  </div>
+
+  <div class="form-field">
+    <%= f.label :needed_by %>
+    <%= f.date_field :needed_by %>
+  </div>
+
+  <div class="form-field">
+    <%= f.label :contact_phone %>
+    <%= f.telephone_field :contact_phone %>
+  </div>
+
+  <div class="form-field">
+    <%= f.label :note, "Note (optional)" %>
+    <%= f.text_area :note, rows: 3 %>
+  </div>
+
+  <%= f.submit "Post request", class: "btn btn-primary" %>
 <% end %>
 ```
 
 **What this does:**
 
+- `new.html.erb` has the page's one `<h1 class="page-title">`, which matches the "Request blood" nav link (an accessibility rule in UI_DESIGN.md). There is no wrapper `div`: the layout already puts every page inside `.container`.
 - `new.html.erb` passes the object into the partial as a local (`blood_request:`), following the team rule "partials get data through locals". (MVC_GUIDE's short example uses `@blood_request` inside the partial; the local version is what we use.)
 - `form_with model: blood_request` sees a new record, so it posts to `/blood_requests`, and names every field `blood_request[...]`. That name is why `params.expect(blood_request: ...)` finds them.
-- The error list only appears when `save` failed, because only then does `errors` contain anything.
-- `f.select ... BLOOD_GROUPS` makes the 8 groups a dropdown, so blood group is never typed freely (a PRD rule). `include_blank` forces a real choice.
+- The `form-errors` box only appears when `save` failed, because only then does `errors` contain anything. It holds one list of the model's full messages, at the top of the form.
+- Each label and its input sit together in a `<div class="form-field">`, which puts the label above the input with space below. `f.label` and the `f.` input helpers share the same field name, so clicking the label focuses the input (and screen readers read them together). Placeholders are not labels; every field has a visible one.
+- The fields are in screen 6's order. `f.label :note, "Note (optional)"` changes the label text; the others use the column name ("Patient name", "Needed by").
+- `f.select ... BLOOD_GROUPS` makes the 8 groups a dropdown, so blood group is never typed freely (a PRD rule). `include_blank` puts a blank "Choose…" option first and forces a real choice.
 - `number_field`, `date_field` and `telephone_field` give the browser the right keyboard and a date picker. They are hints only; the model still checks.
-- The mentor's layout puts pages inside a `flex` container, so the outer `div` with `w-full` keeps your page from being squeezed into a column.
+- `class: "btn btn-primary"` makes "Post request" the one red main action on the page. These are the only classes in the form: the shared stylesheet already styles labels, inputs and selects inside `.form-field`.
 
 **Check it works:** start `bin/dev`, log in, open `/blood_requests/new`.
 
-- Clear the units box and submit: the form comes back with "Units needed is not a number" and your other values still filled.
+- Compare the page with screen 6 of UI_DESIGN.md: same heading, same field order, red "Post request" button.
+- Clear the units box and submit: the form comes back with "Units needed is not a number" in the error box at the top and your other values still filled.
 - Fill everything and submit: you land on `/blood_requests/<id>`. (Until C3 is done this shows a missing-template error; that still proves the save worked.)
 - In the console: `BloodRequest.last.user` is the user you logged in as.
 
-**AI prompt:** "Rails 8.1 app with Hotwire. In `BloodRequestsController`, fill in only the `new` and `create` actions and add a private `blood_request_params` using `params.expect`, permitting patient_name, blood_group, units_needed, hospital, city, needed_by, contact_phone, note. Build the request with `Current.user.blood_requests.new`. On failure use `render :new, status: :unprocessable_entity`. Do not touch the `index` action. Then write `new.html.erb` that renders a `_form` partial with a local `blood_request:`, and the `_form` using `form_with`, `f.select` with `BLOOD_GROUPS` and `CITIES`, and an error list. Explain why 422 is needed with Turbo."
+**AI prompt:** "Rails 8.1 app with Hotwire. In `BloodRequestsController`, fill in only the `new` and `create` actions and add a private `blood_request_params` using `params.expect`, permitting patient_name, blood_group, units_needed, hospital, city, needed_by, contact_phone, note. Build the request with `Current.user.blood_requests.new`. On failure use `render :new, status: :unprocessable_entity`. Do not touch the `index` action. Then write `new.html.erb` that renders a `_form` partial with a local `blood_request:`, and the `_form` using `form_with`. Use only the component classes from UI_DESIGN.md (`page-title`, `form-field`, `form-errors`, `btn btn-primary`); no Tailwind, no inline styles, and no wrapper div (the layout provides the container and flash). `new.html.erb` has one `<h1 class="page-title">Request blood</h1>`. The form starts with a `<div class="form-errors">` holding a `<ul>` of `full_messages`, only when there are errors. Then each label plus input in its own `<div class="form-field">`, in this order: patient name, blood group (`f.select` with `BLOOD_GROUPS`, blank first), units needed (`number_field`, min 1), hospital, city (`f.select` with `CITIES`, blank first), needed by (`date_field`), contact phone (`telephone_field`), note (label "Note (optional)", `text_area`). End with `f.submit "Post request", class: "btn btn-primary"`. Explain why 422 is needed with Turbo."
 
 ### C3. Request page
 
-**Goal:** after saving, the user lands on a page showing every detail, with a marked spot for D and E.
+**Goal:** after saving, the user lands on a page that matches the top of screen 7 (every detail except the contact phone), with a marked spot for E and D.
 
 ```ruby
 # app/controllers/blood_requests_controller.rb
@@ -258,44 +341,38 @@ r.user                   # => the first user
 
 ```erb
 <%# app/views/blood_requests/show.html.erb %>
-<div class="w-full max-w-xl space-y-2">
-  <h1 class="text-2xl font-bold">
-    <%= @blood_request.blood_group %> blood needed at <%= @blood_request.hospital %>
-  </h1>
+<h1 class="page-title"><span class="badge"><%= @blood_request.blood_group %></span> <%= pluralize(@blood_request.units_needed, "unit") %> needed for <%= @blood_request.patient_name %></h1>
 
-  <p>Patient: <%= @blood_request.patient_name %></p>
-  <p>Units needed: <%= @blood_request.units_needed %></p>
-  <p>City: <%= @blood_request.city %></p>
-  <p>Needed by: <%= @blood_request.needed_by.to_fs(:long) %></p>
-  <p>Posted by: <%= @blood_request.user.name %></p>
-  <p>Contact phone: <%= @blood_request.contact_phone %></p>
+<p class="meta"><%= @blood_request.hospital %>, <%= @blood_request.city %></p>
+<p>Needed by <%= @blood_request.needed_by.strftime("%d %b %Y") %></p>
 
-  <% if @blood_request.note.present? %>
-    <p>Note: <%= @blood_request.note %></p>
-  <% end %>
+<% if @blood_request.note.present? %>
+  <p>Note: <%= @blood_request.note %></p>
+<% end %>
 
-  <%# ===== Modules D and E: add your render lines below. Do not edit above this line. ===== %>
-  <%# Module D: render "blood_requests/matching_donors", blood_request: @blood_request %>
-  <%# Module E: render "responses/button", blood_request: @blood_request %>
-  <%# Module E: render "responses/list", blood_request: @blood_request %>
-  <%# ===== end of shared spot ===== %>
-</div>
+<%# ===== Modules D and E: add your render lines below. Do not edit above this line. ===== %>
+<%# Module E: render "responses/button", blood_request: @blood_request %>
+<%# Module E: render "responses/list", blood_request: @blood_request %>
+<%# Module D: render "blood_requests/matching_donors", blood_request: @blood_request %>
+<%# ===== end of shared spot ===== %>
 ```
 
 **What this does:**
 
 - `params[:id]` is the `7` in `/blood_requests/7`. `find` returns that row, or raises `ActiveRecord::RecordNotFound` if there is none. Rails turns that into a 404 "Not found" page (in development you see a red error page saying so).
 - `<%= %>` prints each value; the `<% if %>` hides the note line when there is no note.
-- There is no `notice` code here. The "Request posted." flash from `create` is printed by the layout, which a mentor sets up for every page.
-- `to_fs(:long)` prints the date as "October 12, 2026" instead of `2026-10-12` (single-digit days print as "October 05, 2026").
-- `@blood_request.user.name` works because of `belongs_to :user`.
-- The marked spot holds commented-out lines. D and E each turn their own line into `<%= render ... %>` after your page is on main. Each line is separate, so their edits do not conflict with each other.
+- The page has exactly one `<h1 class="page-title">`, as on screen 7: "[B+] 2 units needed for Ravi Patil". The blood group sits inside a `<span class="badge">`, so it is always written as text, never shown by colour alone.
+- `pluralize(@blood_request.units_needed, "unit")` is a Rails helper that prints the number and the right word: "1 unit", "2 units".
+- `<p class="meta">` is the muted secondary line with the hospital and city, like "Sahyadri Hospital, Pune".
+- `strftime("%d %b %Y")` formats the date from a pattern: `%d` is the two-digit day, `%b` the short month name, `%Y` the four-digit year. So `2026-10-12` prints as "12 Oct 2026", matching screen 7.
+- There is no `notice` code and no wrapper `div` here. The layout puts the page inside `.container` and prints the "Request posted." flash from `create`.
+- The marked spot holds commented-out lines in screen 7's order: E's "I can help" button, then E's responses list, then D's matching donors. D and E each turn their own line into `<%= render ... %>` after your page is on main. Each line is separate, so their edits do not conflict with each other.
 
-**Decision on `contact_phone`:** it is shown on this page, and only here. It is the requester's own number, typed into a public request so donors can call, so it is meant to be seen by donors. Every page needs login, so only signed-in users see it. It is never shown on Module D's list. Donor phone numbers are a different rule and belong to Module E's owner-only list.
+**Decision on `contact_phone`:** the requester's contact phone is collected by the form and stored in the table, but it is not displayed anywhere in this PoC, including this page. UI_DESIGN.md's rule is "Phones appear only in a request's responses list, to its creator." Instead, donors click Module E's "I can help" button, and the requester (the only person who sees the responses list) contacts them using the phones shown there. So there is no `contact_phone` line in `show.html.erb`, and the only phone numbers on this page come from E's creator-only responses list.
 
-**Check it works:** post a request through the form. You should land on its page with the "Request posted." message (printed by the layout) and every field. Refresh: the notice is gone, the details stay. Open `/blood_requests/99999`: you get the "Not found" error, not a broken page with `nil` errors.
+**Check it works:** post a request through the form. You should land on its page with the "Request posted." message (printed by the layout), and the page should look like the top of screen 7: badge, units and patient name in the heading, hospital and city, needed-by date, note. No phone number anywhere. Refresh: the notice is gone, the details stay. Open `/blood_requests/99999`: you get the "Not found" error, not a broken page with `nil` errors.
 
-**AI prompt:** "Rails 8.1. Fill in the `show` action of `BloodRequestsController` with `BloodRequest.find(params[:id])`. Write `app/views/blood_requests/show.html.erb` with Tailwind classes, showing blood group, hospital, patient name, units needed, city, needed_by as a long date, the requester's name, contact_phone and the note only if present. End with a marked comment block where other modules will add `render` lines for `blood_requests/matching_donors`, `responses/button` and `responses/list`, each with a local `blood_request:`. Explain each ERB tag."
+**AI prompt:** "Rails 8.1. Fill in the `show` action of `BloodRequestsController` with `BloodRequest.find(params[:id])`. Write `app/views/blood_requests/show.html.erb`. Use only the component classes from UI_DESIGN.md (`page-title`, `badge`, `meta`); no Tailwind, no inline styles, and no wrapper div or flash code (the layout provides them). Start with one `<h1 class="page-title">` containing the blood group in a `<span class="badge">`, then `pluralize(units_needed, "unit")` needed for the patient name. Then a `<p class="meta">` with hospital and city, a paragraph 'Needed by' with `needed_by.strftime("%d %b %Y")`, and the note only if present, as 'Note: ...'. Do not show contact_phone or the requester's name. End with a marked comment block where other modules will add `render` lines, in this order: `responses/button`, `responses/list`, `blood_requests/matching_donors`, each with a local `blood_request:`. Explain each ERB tag."
 
 ## Privacy and edge cases
 
@@ -308,19 +385,21 @@ r.user                   # => the first user
 | Id that does not exist | 404 Not found | `find` |
 | Refreshing after posting | Just reloads the page; no duplicate request | Redirect after `create` |
 | Note contains `<script>` | Shown as plain text, not run | ERB `<%= %>` escapes HTML automatically |
-| Contact phone visible | Only on this page, only to signed-in users | Your C3 decision; never on lists |
+| Requester's contact phone | Collected and stored, but not shown on the request page or any list | Your C3 decision; `show.html.erb` has no `contact_phone` line |
+| A donor wants to help | Clicks "I can help"; the requester sees the donor's phone in the responses list | Module E (creator-only list) |
 
 Use only made-up names and phone numbers, for example `9000000001`.
 
 ## Testing checklist
 
-1. Log in, click **Request blood**. Expected: empty form, units shows 1, dropdowns say "Choose…".
-2. Submit the empty form. Expected: same page, a list of errors. (The address bar still shows `/blood_requests/new`: Turbo swaps the page content without changing the URL.)
+1. Log in, click **Request blood**. Expected: the page matches screen 6 of UI_DESIGN.md: heading "Request blood", fields in the screen's order with visible labels, units shows 1, dropdowns say "Choose…", one red "Post request" button.
+2. Submit the empty form. Expected: same page, a `form-errors` box at the top listing the errors. (The address bar still shows `/blood_requests/new`: Turbo swaps the page content without changing the URL.)
 3. Fill everything except units (clear it). Expected: "Units needed is not a number"; other values kept.
-4. Fill everything correctly. Expected: `/blood_requests/<id>` with "Request posted." and all details.
-5. Refresh. Expected: notice gone, no second request created (`BloodRequest.count` unchanged).
-6. Log out, log in as a different user, open the same URL. Expected: page still shows; "Posted by" is the first user.
-7. Open `/blood_requests/99999`. Expected: Not found.
+4. Fill everything correctly. Expected: `/blood_requests/<id>` with "Request posted." and the request details.
+5. Check the request page against the top of screen 7: blood group badge, "2 units needed for ..." heading, hospital and city line, "Needed by 12 Oct 2026" style date, note only if you typed one. Expected: no phone number anywhere on the page.
+6. Refresh. Expected: notice gone, no second request created (`BloodRequest.count` unchanged).
+7. Log out, log in as a different user, open the same URL. Expected: page still shows the same details, and still no phone number.
+8. Open `/blood_requests/99999`. Expected: Not found.
 
 > Needs test setup by a mentor: this app was created without the test framework (`config/application.rb` has `rails/test_unit/railtie` commented out and there is no `test/` folder). Skip this if a mentor has not set it up.
 
@@ -362,7 +441,7 @@ If every test fails with "uninitialized constant Donor" or "Missing model class 
 | A field saves as empty | Field missing from `blood_request_params` | Add it to the `params.expect` list |
 | `ParameterMissing` (red error page in development; 400 Bad Request in production) | Form fields not named `blood_request[...]` | Use `form_with model:` and `f.` helpers |
 | `undefined local variable or method 'blood_request'` in `_form` | Partial rendered without the local | `render "form", blood_request: @blood_request` |
-| `undefined method 'to_fs' for nil` on show | A request without `needed_by` (made outside validations) | Make sure C1 validations are in; fix the bad row |
+| `undefined method 'strftime' for nil` on show | A request without `needed_by` (made outside validations) | Make sure C1 validations are in; fix the bad row |
 | `uninitialized constant BLOOD_GROUPS` | Constants initializer missing on your branch | Pull main; restart `bin/dev` after initializer changes |
 | Merge conflict in the controller | Whole file rewritten by the AI | Only edit your method bodies; ask a mentor to resolve |
 | Notice shows twice | Your view prints `notice` and the layout does too | Remove the `notice` block from `show.html.erb`; the layout handles it |
@@ -380,14 +459,14 @@ Questions a mentor will ask, and what a good answer covers:
 | Why the 422? | Turbo only shows HTML from a failed form submission if the status says it failed |
 | How does `redirect_to @blood_request` know the URL? | Polymorphic URL: model name → `blood_request_url` → `to_param` → `/blood_requests/7` |
 | What happens for an id that does not exist? | `find` raises `RecordNotFound`, Rails shows 404 |
-| Why is `contact_phone` on this page but not the list? | Requester chose to share it for donors; pages need login; lists never show phones |
+| Why is `contact_phone` not shown on the request page? | UI rule: phones appear only in a request's responses list, to its creator. It is stored but not displayed; donors click "I can help" and the requester calls them using E's list |
 
 Your 5-line explanation (template from [MVC_GUIDE.md](../MVC_GUIDE.md#explaining-your-module-at-the-demo)):
 
 1. "When you open **`/blood_requests/new`**, the router sends it to **`BloodRequestsController#new`**, which gives the form an empty request; submitting goes to **`create`**."
 2. "`create` builds the request **for the logged-in user** with `Current.user.blood_requests.new(blood_request_params)` and calls `save`."
 3. "The model makes sure **every field except note is filled, blood group and city come from the fixed lists, and units is a whole number of at least 1**."
-4. "The view **`show.html.erb`** shows **all the request details and the requester's contact phone**, and **phone numbers never appear on the list page**."
+4. "The view **`show.html.erb`** shows **the blood group, units, patient, hospital, city, date and note, but not the contact phone**, because **phones appear only in the responses list, to the request's creator**."
 5. "If something is wrong, like **units left blank**, **`save` returns false and the form comes back with the errors and my typed values, using a 422 status so Turbo shows it**."
 
 ## Out of scope
@@ -399,5 +478,6 @@ Say no if the AI suggests any of these:
 - Blood group compatibility matching (O- gives to all), notifications, maps.
 - Gems such as Devise, Pundit, Simple Form or a date-picker library.
 - Moving flash display into the layout yourself (it is a mentor's file).
-- Hiding `contact_phone` behind extra reveal rules; contact-reveal logic belongs to mentors and Module E.
+- Showing `contact_phone` on the request page, or adding reveal rules for it; phones appear only in Module E's creator-only responses list.
+- Tailwind classes, inline styles, new CSS or a wrapper `div` for width; use only the UI_DESIGN.md component classes.
 - The responses list, "I can help" button or matching donors query: those are E's and D's; you only leave the spot.

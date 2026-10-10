@@ -4,17 +4,41 @@ Oct 10, 2026 · Vishwajeetsingh Desurkar
 
 You build the step that connects donors and requesters: a donor clicks "I can help" on a blood request, and only the person who posted that request sees who responded, with name and phone.
 
-See also: [ATTENDEE_TASKS.md](../ATTENDEE_TASKS.md#module-e-responses) for your task list, [MVC_GUIDE.md](../MVC_GUIDE.md) for how models, views and controllers fit together, and [DB_SCHEMA.md](../DB_SCHEMA.md#responses-module-e) for the `responses` table.
+See also: [ATTENDEE_TASKS.md](../ATTENDEE_TASKS.md#module-e-responses) for your task list, [MVC_GUIDE.md](../MVC_GUIDE.md) for how models, views and controllers fit together, and [DB_SCHEMA.md](../DB_SCHEMA.md#responses-module-e) for the `responses` table, [UI_DESIGN.md](../UI_DESIGN.md) for the page layout and the component classes your views use.
 
 ## What you are building
 
-Two small sections at the bottom of the request page (`/blood_requests/:id`, built by Module C). What each person sees depends on who is logged in:
+Two small sections on the request page (`/blood_requests/:id`, built by Module C), between Module C's request details and Module D's matching donors. This is [screen 7 in UI_DESIGN.md](../UI_DESIGN.md#7-request-page-module-c-with-d-and-e):
 
-| Who is looking | What they see in your sections |
-| --- | --- |
-| A donor who has not responded yet | An **"I can help"** button |
-| A donor who already responded | "You offered to help. The requester can see your name and phone." (no button) |
-| The person who posted the request | No button. A **"People who can help"** list: each responder's name and phone, or "No responses yet" |
+```
+  [B+]  2 units needed for Ravi Patil
+  Sahyadri Hospital, Pune
+  Needed by 12 Oct 2026
+  Note: Surgery scheduled for Monday morning.
+
+  ------------------------------------------------
+  [ I can help ]                          <- Module E
+  ------------------------------------------------
+  Responses (2)                           <- Module E, creator only
+    Asha Kulkarni    98xxxxxx01
+    Meera Joshi      98xxxxxx02
+  ------------------------------------------------
+  Matching donors (3)                     <- Module D, cut first
+    Asha Kulkarni    Pune
+    Neha Shah        Pune
+```
+
+What each viewer sees (copied from UI_DESIGN.md; your two columns are the first two):
+
+| Viewer | "I can help" button | Responses list | Matching donors |
+| --- | --- | --- | --- |
+| The request's creator | Hidden | Shown, with phones | Shown |
+| A user who has not responded | Shown | Hidden | Shown |
+| A user who has responded | Replaced by "You offered to help" | Hidden | Shown |
+
+With no responses yet, the creator sees "No one has responded yet." in the responses section.
+
+Your views use only the component classes from [UI_DESIGN.md](../UI_DESIGN.md#components): `btn btn-primary` for the button, `meta` for "You offered to help", `card-list` and `card` for the responses, `empty-state` for the empty list. No Tailwind, no inline styles, no new CSS. The flash message is printed by the mentor's layout (`.flash.flash-notice` / `.flash.flash-alert`), not by you.
 
 Clicking the button saves a row in the `responses` table and brings the donor back to the same page with the flash message "Thank you! The requester can now see your contact."
 
@@ -28,10 +52,13 @@ From [ATTENDEE_TASKS.md](../ATTENDEE_TASKS.md#module-e-responses) and [TASKS.md]
 
 - [ ] **E1.** In `bin/rails console` a response can be created; a duplicate (same donor, same request) is invalid; a response by the request's owner is invalid.
 - [ ] **E2.** A donor can click "I can help" once and sees a confirmation. After that the button is gone, and a second POST is refused with a message.
-- [ ] **E2.** The request's owner never sees the button.
-- [ ] **E3.** The request's owner sees each responder's name and phone. Any other logged-in user sees no list, and no phone appears in that user's page source.
-- [ ] **E3.** With no responses, the owner sees "No responses yet".
-- [ ] Both partials are rendered on Module C's request page (after Module C merges).
+- [ ] **E3.** With no responses, the owner sees "Responses (0)" and "No one has responded yet."
+- [ ] Both partials are rendered on Module C's request page (after Module C merges), in the order of screen 7: button, then responses list, then Module D's matching donors.
+- [ ] Each row of the "What each viewer sees" table holds:
+  - [ ] **The request's creator:** no "I can help" button; the responses list is shown, with each responder's name and phone, as cards.
+  - [ ] **A user who has not responded:** the red "I can help" button (`btn btn-primary`) is shown; no responses list, and no phone appears in that user's page source.
+  - [ ] **A user who has responded:** the button is replaced by "You offered to help" (muted `meta` text); still no responses list and no phones in the page source.
+- [ ] Your partials use only UI_DESIGN.md component classes: no Tailwind, no inline styles, no `<h1>` (the request page already has one).
 - [ ] **E4.** You have explained the model and the "only the creator sees it" rule to a mentor, and the mentor signed off.
 
 ## Concepts you will use
@@ -81,6 +108,8 @@ A plain link (`link_to`) always sends `GET`, and `GET` must never change data: b
 ### Privacy by not rendering
 
 The responses list is wrapped in `<% if blood_request.user == Current.user %>`. For anyone else, the `if` is false and Rails never writes that HTML, so the phone numbers are not in the page at all, not hidden with CSS. This is enough here because your list is the **only** place responder data is shown: there is no responses index page, no JSON route. You can prove it with "View page source".
+
+In fact, per [UI_DESIGN.md](../UI_DESIGN.md#principles) ("Never show a phone number on a list"), your creator-only list is the **only place any phone number appears in the whole app**. Module C's request page no longer shows the requester's `contact_phone`, and the donors and requests lists show no phones. So the owner check in your partial is the app's one privacy gate for phone numbers.
 
 ## Data you work with
 
@@ -244,10 +273,9 @@ end
 <%# app/views/responses/_button.html.erb %>
 <% if blood_request.user != Current.user %>
   <% if blood_request.responses.exists?(donor: Current.user) %>
-    <p>You offered to help. The requester can see your name and phone.</p>
+    <p class="meta">You offered to help</p>
   <% else %>
-    <%= button_to "I can help", blood_request_responses_path(blood_request), method: :post,
-                  class: "rounded bg-red-600 px-4 py-2 text-white" %>
+    <%= button_to "I can help", blood_request_responses_path(blood_request), class: "btn btn-primary" %>
   <% end %>
 <% end %>
 ```
@@ -260,23 +288,25 @@ end
 - `save` runs your E1 validations. On success: `redirect_to @blood_request` sends the browser to `/blood_requests/5` with a green `notice`.
 - On failure, also a redirect, with an `alert` like "Donor has already responded to this request". **Why redirect and not `render`?** The usual "re-render the form" ([MVC_GUIDE](../MVC_GUIDE.md#the-controller)) does not fit: you have no form page of your own, the button lives on Module C's page, and rendering `blood_requests/show` from your controller would need everything that page needs. Redirecting reuses Module C's `show` as-is, refreshing the page does not POST again, and Turbo expects a redirect after a form submission.
 - `to_sentence` joins messages into one readable sentence.
-- In the partial, `blood_request` (no `@`) is the local passed in by `render`. The outer `if` hides everything from the owner. `exists?(donor: Current.user)` asks the database "is there already a response from this user?" with a cheap `SELECT 1`.
-- `button_to` outputs a `<form method="post" action="/blood_requests/5/responses">` with a hidden `authenticity_token` and one `<button>`. `method: :post` is the default; it is written out so you can read it.
+- In the partial, `blood_request` (no `@`) is the local passed in by `render`. The outer `if` hides everything from the owner (screen 7: "Hidden" for the creator). `exists?(donor: Current.user)` asks the database "is there already a response from this user?" with a cheap `SELECT 1`.
+- `<p class="meta">You offered to help</p>` takes the button's place for a user who already responded. `meta` is UI_DESIGN.md's muted secondary-text class.
+- `button_to` outputs a `<form method="post" action="/blood_requests/5/responses">` with a hidden `authenticity_token` and one `<button>`. POST is `button_to`'s default, so no `method:` is needed. `class: "btn btn-primary"` goes on the `<button>` and makes it the page's red main action, as defined in UI_DESIGN.md. Do not add other classes or a `style=`.
+- No `<h1>` or `<h2>` here: the request page already has its `<h1>`, and a single button needs no heading.
 
 The button is only convenience. The real protection is the model: even if someone sends the POST by hand, E1's validations refuse it.
 
 **Check it works** (after Module C's page is on main and your two lines are added, see [Working with other modules](#working-with-other-modules)):
 
-1. Log in as Meera, open Asha's request: you see "I can help".
-2. Click it: same page, flash "Thank you! The requester can now see your contact.", button replaced by "You offered to help...".
+1. Log in as Meera, open Asha's request: you see the red "I can help" button.
+2. Click it: same page, green flash "Thank you! The requester can now see your contact.", button replaced by the muted line "You offered to help".
 3. In the console: `Response.last.donor.name  # => "Meera"`.
 4. Log in as Asha, open her own request: no button.
 
-The flash only shows if the layout prints `notice` and `alert`. If your message does not appear, ask a mentor (the layout is theirs).
+The flash only shows if the layout prints `notice` and `alert` (as `.flash.flash-notice` and `.flash.flash-alert`). If your message does not appear, ask a mentor (the layout is theirs).
 
 **Suggested AI prompt:**
 
-> Rails 8.1 app. The route is `resources :blood_requests do resources :responses, only: [:create] end`. In the **controller** `app/controllers/responses_controller.rb`, write `create`: a `before_action` loads `@blood_request` from `params[:blood_request_id]`, then build `@donor_response = @blood_request.responses.new(donor: Current.user)`. On save, `redirect_to @blood_request` with notice "Thank you! The requester can now see your contact."; otherwise redirect to the same page with `alert:` set to the error messages joined by `to_sentence`. No strong params, because there are no form fields. Then write the **partial** `app/views/responses/_button.html.erb` using a local `blood_request` (not an instance variable): show nothing to the request's owner, "You offered to help..." if `Current.user` already responded, otherwise a `button_to "I can help"` that POSTs to `blood_request_responses_path(blood_request)`. Explain what HTML `button_to` produces and why it includes an authenticity token.
+> Rails 8.1 app. The route is `resources :blood_requests do resources :responses, only: [:create] end`. In the **controller** `app/controllers/responses_controller.rb`, write `create`: a `before_action` loads `@blood_request` from `params[:blood_request_id]`, then build `@donor_response = @blood_request.responses.new(donor: Current.user)`. On save, `redirect_to @blood_request` with notice "Thank you! The requester can now see your contact."; otherwise redirect to the same page with `alert:` set to the error messages joined by `to_sentence`. No strong params, because there are no form fields. Then write the **partial** `app/views/responses/_button.html.erb` using a local `blood_request` (not an instance variable): show nothing to the request's owner, `<p class="meta">You offered to help</p>` if `Current.user` already responded, otherwise a `button_to "I can help"` with `class: "btn btn-primary"` that POSTs to `blood_request_responses_path(blood_request)`. Use only the component classes from UI_DESIGN.md (`page-title`, `card`, `card-list`, `btn`, `btn btn-primary`, `form-field`, `form-errors`, `filter-bar`, `badge`, `meta`, `empty-state`); no Tailwind, no inline styles. No `<h1>` in the partial. Explain what HTML `button_to` produces and why it includes an authenticity token.
 
 ### E3. Responses list (with a mentor; mentor takes over if behind)
 
@@ -285,47 +315,50 @@ The flash only shows if the layout prints `notice` and `alert`. If your message 
 ```erb
 <%# app/views/responses/_list.html.erb %>
 <% if blood_request.user == Current.user %>
-  <section class="mt-6">
-    <h2 class="text-xl font-bold">People who can help</h2>
+  <% responses = blood_request.responses.includes(donor: :donor_profile).order(:created_at).to_a %>
 
-    <% donor_responses = blood_request.responses.includes(donor: :donor_profile).order(:created_at) %>
+  <h2>Responses (<%= responses.size %>)</h2>
 
-    <% if donor_responses.present? %>
-      <ul>
-        <% donor_responses.each do |donor_response| %>
-          <li>
-            <%= donor_response.donor.name %> ·
-            <%= donor_response.donor.donor_profile&.phone || "No phone on profile" %>
-          </li>
-        <% end %>
-      </ul>
-    <% else %>
-      <p>No responses yet.</p>
-    <% end %>
-  </section>
+  <% if responses.any? %>
+    <div class="card-list">
+      <% responses.each do |donor_response| %>
+        <div class="card">
+          <p><%= donor_response.donor.name %></p>
+          <p class="meta"><%= donor_response.donor.donor_profile&.phone || "No phone on profile" %></p>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="empty-state">
+      <p>No one has responded yet.</p>
+    </div>
+  <% end %>
 <% end %>
 ```
 
 **What this does:**
 
 - `<% if blood_request.user == Current.user %>`: two `=` signs compare. For anyone but the owner, nothing inside is sent to the browser.
-- `includes(donor: :donor_profile)`: without it, Rails runs one query for the responses, then one for each donor, then one for each profile ("N+1 queries"). With it, a fixed handful of queries (responses, users, profiles), however many responders. `present?` loads the list once and reuses it for the loop (`any?` would run an extra `SELECT 1 ... LIMIT 1` first).
+- `includes(donor: :donor_profile)`: without it, Rails runs one query for the responses, then one for each donor, then one for each profile ("N+1 queries"). With it, a fixed handful of queries (responses, users, profiles), however many responders. `.to_a` loads the list once, so `size`, `any?` and the loop all reuse it without asking the database again.
 - `order(:created_at)`: first responder first.
-- `|donor_response|`: again, not `response`; views can also see the controller's `response` method.
+- `responses` (plural) is fine as a local name; only the singular `response` clashes with the controller's `response` method, which views can also see. That is why the block variable is `|donor_response|`, not `|response|`.
+- `<h2>Responses (<%= responses.size %>)</h2>`: the section heading from screen 7, with the count. It is an `<h2>` because the request page already has its one `<h1>` (UI_DESIGN.md: one `<h1>` per page).
+- `card-list` stacks the cards with a gap; each `card` is one response, as UI_DESIGN.md says ("one donor, one request, one response"). The name is on the first line, the phone on a muted `meta` line.
 - `donor_profile&.phone`: a user can respond without having filled in a donor profile (Module A). Then `donor_profile` is `nil`, and `nil.phone` would crash the page. `&.` means "call `.phone` only if not `nil`, otherwise give `nil`", and `|| "No phone on profile"` shows a fallback.
-- The empty state keeps the page from looking broken before anyone responds.
+- The `empty-state` box keeps the page from looking broken before anyone responds. UI_DESIGN.md's empty state usually has one link to the next action; here the creator's next action is simply to wait, so a message is enough.
+- Only UI_DESIGN.md classes, no Tailwind, no `style=`. The page's look comes from the mentor's stylesheet.
 
 A note on the [MVC_GUIDE rule](../MVC_GUIDE.md#the-view) "no queries in views": normally the controller prepares data. Here the page's controller action is Module C's `show`, and partials get data through locals, so a short query on the local `blood_request` is the agreed trade-off. Keep it to this one line.
 
 **Check it works:**
 
-1. As Asha, open her request after Meera responded: "People who can help" shows "Meera · (phone)".
+1. As Asha, open her request after Meera responded: "Responses (1)" and a card with Meera's name and phone.
 2. As Meera (or any third user) on the same page: no list. Right-click, View page source, search for Meera's phone number: not found.
-3. A request with no responses, opened by its owner: "No responses yet."
+3. A request with no responses, opened by its owner: "Responses (0)" and "No one has responded yet."
 
 **Suggested AI prompt:**
 
-> In the Rails **partial** `app/views/responses/_list.html.erb`, using a local `blood_request`, show a "People who can help" list only when `blood_request.user == Current.user`. List each response's `donor.name` and `donor.donor_profile&.phone`, with "No phone on profile" as a fallback, and "No responses yet." when empty. Load with `includes(donor: :donor_profile)`. Name the block variable `donor_response`. Explain why the `if` keeps phone numbers out of the HTML, what `&.` does, and what `includes` prevents.
+> In the Rails **partial** `app/views/responses/_list.html.erb`, using a local `blood_request`, show the responses only when `blood_request.user == Current.user`. Start with `<h2>Responses (<%= responses.size %>)</h2>` (no `<h1>`; the page already has one), then a `<div class="card-list">` with one `<div class="card">` per response showing `donor.name` and, in a `<p class="meta">`, `donor.donor_profile&.phone` with "No phone on profile" as a fallback. When empty, show `<div class="empty-state"><p>No one has responded yet.</p></div>`. Load with `includes(donor: :donor_profile)`. Name the block variable `donor_response`. Use only the component classes from UI_DESIGN.md (`page-title`, `card`, `card-list`, `btn`, `btn btn-primary`, `form-field`, `form-errors`, `filter-bar`, `badge`, `meta`, `empty-state`); no Tailwind, no inline styles. Explain why the `if` keeps phone numbers out of the HTML, what `&.` does, and what `includes` prevents.
 
 ## Privacy and edge cases
 
@@ -340,6 +373,7 @@ A note on the [MVC_GUIDE rule](../MVC_GUIDE.md#the-view) "no queries in views": 
 | Responder has no donor profile | Shows "No phone on profile" instead of crashing | `&.` and `||` |
 | Non-owner looks for phones in the page | Not in the HTML at all | `if` around the list |
 | Phones on list pages | Never: your data only appears on the request page, only for its owner | Your partial is the only place it is rendered |
+| Phones anywhere else in the app | Never: per UI_DESIGN.md, your creator-only list is the only place any phone number appears (Module C no longer shows the requester's `contact_phone`) | Your owner check |
 
 Optional, with a mentor, if time allows: turn the rare race into a friendly message instead of an error page.
 
@@ -356,15 +390,18 @@ Use two browsers, or one normal window and one private window, so two users are 
 
 | # | Window | Step | Expected |
 | --- | --- | --- | --- |
-| 1 | A | Log in as the requester, post a request (Module C) | Request page shows, no "I can help", list says "No responses yet." |
-| 2 | B | Log in as a donor who has a profile, open the same request | "I can help" button, no responses list |
-| 3 | B | View page source | No phone numbers from responders anywhere |
-| 4 | B | Click "I can help" | Same page, notice "Thank you! The requester can now see your contact.", button replaced by "You offered to help..." |
-| 5 | B | Refresh the page | No second response created; still "You offered to help..." |
-| 6 | A | Refresh the request page | List shows the donor's name and phone |
-| 7 | B | Open a different request | "I can help" is back (one response per request, not per donor) |
-| 8 | Console | `Response.new(blood_request: BloodRequest.last, donor: BloodRequest.last.user).valid?` | `false` |
-| 9 | Console | `Response.count` before and after step 5 | Unchanged |
+| 1 | A | Log in as the requester, post a request (Module C) | **Creator row:** request page shows, no "I can help", "Responses (0)" and "No one has responded yet." |
+| 2 | B | Log in as a donor who has a profile, open the same request | **Not-responded row:** red "I can help" button, no responses list |
+| 3 | B | View page source | No phone numbers anywhere |
+| 4 | B | Click "I can help" | Same page, green notice "Thank you! The requester can now see your contact." |
+| 5 | B | Look at the button's spot | **Responded row:** button replaced by the muted line "You offered to help", still no responses list |
+| 6 | B | Refresh the page | No second response created; still "You offered to help" |
+| 7 | A | Refresh the request page | **Creator row:** still no button; "Responses (1)" with one card: the donor's name and phone |
+| 8 | A and B | Scroll down | Order matches screen 7: button (or "You offered to help"), then responses (creator only), then Module D's matching donors |
+| 9 | A and B | View page source | No Tailwind classes, no `style=`, only one `<h1>` on the page |
+| 10 | B | Open a different request | "I can help" is back (one response per request, not per donor) |
+| 11 | Console | `Response.new(blood_request: BloodRequest.last, donor: BloodRequest.last.user).valid?` | `false` |
+| 12 | Console | `Response.count` before and after step 6 | Unchanged |
 
 Optional model test:
 
@@ -416,11 +453,24 @@ Run it with `bin/rails test test/models/response_test.rb`. For a controller or i
 
 **After Module C merges:** pull main into your branch (`git pull origin main`), then in the marked spot of `app/views/blood_requests/show.html.erb` turn your two commented lines into real ones. Tell Module C's owner before you do.
 
+Module C leaves this shared spot. Its order matches screen 7: your button first, then your list, then Module D's matching donors last.
+
 ```erb
-<%# app/views/blood_requests/show.html.erb, marked spot only %>
+<%# ===== Modules D and E: add your render lines below. Do not edit above this line. ===== %>
+<%# Module E: render "responses/button", blood_request: @blood_request %>
+<%# Module E: render "responses/list", blood_request: @blood_request %>
+<%# Module D: render "blood_requests/matching_donors", blood_request: @blood_request %>
+<%# ===== end of shared spot ===== %>
+```
+
+Change only your two `Module E` lines, in place, so they become:
+
+```erb
 <%= render "responses/button", blood_request: @blood_request %>
 <%= render "responses/list",   blood_request: @blood_request %>
 ```
+
+Leave Module D's line where it is (after yours), whether or not D has turned it on yet. Do not move lines around: keeping the order is what makes the page look like screen 7.
 
 Note the leading `_` is dropped in `render`, and the folder is included because the partial lives in `responses/`, not `blood_requests/`.
 
@@ -456,7 +506,7 @@ Questions a mentor will ask, and what a good answer covers:
 5. **Why `button_to` and not `link_to`?** It changes data, so it must be POST; it includes the CSRF token.
 6. **Where does the request id come from, and why no strong params?** From the nested URL, `params[:blood_request_id]`. No form fields; the donor is always `Current.user`, never from params.
 7. **Why redirect on failure instead of render?** No form of your own; the button lives on Module C's page; refresh-safe; Turbo expects it.
-8. **How is the phone kept private?** The list partial is wrapped in an owner check, so for other users the HTML is never generated. It is the only place responder phones appear. Show it with View page source.
+8. **How is the phone kept private?** The list partial is wrapped in an owner check, so for other users the HTML is never generated. It is the only place any phone number appears in the app. Show it with View page source.
 9. **What does `&.` do here?** Avoids crashing when a responder has no donor profile.
 
 Your 5-line explanation, following the [MVC_GUIDE template](../MVC_GUIDE.md#explaining-your-module-at-the-demo):
