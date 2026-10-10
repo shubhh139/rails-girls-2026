@@ -154,7 +154,6 @@ blood_request_responses POST /blood_requests/:blood_request_id/responses(.:forma
 | `app/controllers/responses_controller.rb` | `create` action (E2); mentors created it with an empty action |
 | `app/views/responses/_button.html.erb` | "I can help" button or "You offered to help" (E2) |
 | `app/views/responses/_list.html.erb` | Owner-only responses list (E3) |
-| `test/models/response_test.rb` | Optional model test |
 
 Plus, after Module C merges: **two lines** in the marked spot of `app/views/blood_requests/show.html.erb`.
 
@@ -369,7 +368,7 @@ A note on the [MVC_GUIDE rule](../MVC_GUIDE.md#the-view) "no queries in views": 
 | Owner sends the POST by hand (curl, dev tools) | Save fails: "You cannot respond to your own request" | `donor_is_not_requester`; the hidden button is only convenience |
 | Someone tries to respond as another user | Impossible: the donor is always `Current.user`, never taken from `params` | Controller |
 | Request id does not exist | `ActiveRecord::RecordNotFound`, 404 page | `BloodRequest.find` |
-| Not logged in | Sent to the login page | `Authentication` concern |
+| Not logged in | Sent to the login page | The app's login check in `ApplicationController` (mentors) |
 | Responder has no donor profile | Shows "No phone on profile" instead of crashing | `&.` and `||` |
 | Non-owner looks for phones in the page | Not in the HTML at all | `if` around the list |
 | Phones on list pages | Never: your data only appears on the request page, only for its owner | Your partial is the only place it is rendered |
@@ -386,7 +385,7 @@ end
 
 ## Testing checklist
 
-Use two browsers, or one normal window and one private window, so two users are logged in at once. Run `bin/rails db:seed` first if seeds are merged; otherwise create users in the console as in E1.
+Use two browsers, or one normal window and one private window, so two users are logged in at once. Log in as two seeded users, for example requester1@example.com in window A and donor1@example.com in window B (password "password" for both). Run `bin/rails db:seed` first if seeds are merged; otherwise create users in the console as in E1.
 
 | # | Window | Step | Expected |
 | --- | --- | --- | --- |
@@ -402,36 +401,6 @@ Use two browsers, or one normal window and one private window, so two users are 
 | 10 | B | Open a different request | "I can help" is back (one response per request, not per donor) |
 | 11 | Console | `Response.new(blood_request: BloodRequest.last, donor: BloodRequest.last.user).valid?` | `false` |
 | 12 | Console | `Response.count` before and after step 6 | Unchanged |
-
-Optional model test:
-
-> Needs test setup by a mentor: this app was created without the test framework (`config/application.rb` has `rails/test_unit/railtie` commented out and there is no `test/` folder). Skip this if a mentor has not set it up.
-
-```ruby
-# test/models/response_test.rb
-require "test_helper"
-
-class ResponseTest < ActiveSupport::TestCase
-  setup do
-    @owner = User.create!(name: "Owner", email_address: "owner@test.example", password: "password123")
-    @donor = User.create!(name: "Donor", email_address: "donor@test.example", password: "password123")
-    @blood_request = BloodRequest.create!(user: @owner, patient_name: "P", blood_group: "A+", units_needed: 1,
-                                          hospital: "H", city: "Pune", needed_by: Date.tomorrow,
-                                          contact_phone: "9000000002")
-  end
-
-  test "a donor can respond only once" do
-    assert Response.create(blood_request: @blood_request, donor: @donor).persisted?
-    assert_not Response.new(blood_request: @blood_request, donor: @donor).valid?
-  end
-
-  test "the owner cannot respond to their own request" do
-    assert_not Response.new(blood_request: @blood_request, donor: @owner).valid?
-  end
-end
-```
-
-Run it with `bin/rails test test/models/response_test.rb`. For a controller or integration test, sign in with `sign_in_as(user)` from the Rails 8.1 authentication generator's test helper.
 
 ## Working with other modules
 

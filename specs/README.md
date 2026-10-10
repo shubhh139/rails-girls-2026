@@ -38,11 +38,10 @@ All five specs depend on these. Mentors set them up before the day. If something
 
 ### Routes
 
-Written by mentors in `config/routes.rb`, under the routes the authentication generator added (`resource :session`, `resources :passwords`) and the sign-up route (`resource :registration, only: [ :new, :create ]`, so `/registration/new` as in UI_DESIGN.md). Nobody edits this file during the build.
+Written by mentors in `config/routes.rb`, under the home, style guide, login (`resource :session, only: [ :new, :create, :destroy ]`) and sign-up (`resource :registration, only: [ :new, :create ]`) routes. Nobody edits this file during the build.
 
 ```ruby
 # config/routes.rb
-root "pages#home"
 resource  :donor_profile, only: [ :new, :create, :edit, :update ]   # Module A
 resources :donors, only: [ :index ]                                   # Module B
 resources :blood_requests, only: [ :index, :show, :new, :create ] do  # Modules C and D
@@ -67,8 +66,8 @@ end
 
 | What | Where | Used by |
 | --- | --- | --- |
-| `Current.user`, the logged-in user | Rails 8 authentication generator | All |
-| Login required on every page | `Authentication` concern in `ApplicationController` | All |
+| `Current.user`, the logged-in user; `signed_in?` in views | The app's login: `ApplicationController` (user id in the session cookie), `app/models/current.rb` | All |
+| Login required on every page (signed-out visitors go to `/session/new`) | `ApplicationController` (`require_login`; opt out with `allow_unauthenticated_access`) | All |
 | `BLOOD_GROUPS = %w[A+ A- B+ B- AB+ AB- O+ O-].freeze` | `config/initializers/constants.rb` | A, B, C, D |
 | `CITIES = %w[Pune Mumbai Nashik Nagpur Kolhapur].freeze` | `config/initializers/constants.rb` | A, B, C, D |
 | Layout: nav, flash (`.flash.flash-notice`, `.flash.flash-alert`), `.container`, demo footer | `app/views/layouts/application.html.erb`, added by a mentor | All |
@@ -116,32 +115,18 @@ Suggested merge order at 1:30: **C first** (others build on the request page), t
 
 ## Mentor checklist before the day
 
-The specs rely on all of these. TASKS.md P1–P5 and W1 cover them.
+All done on `main`; see the [README](../README.md#what-mentors-have-set-up) for what each piece is and where it lives.
 
-### App setup
-
-| # | What | Where | Task |
+| # | What | Task | Status |
 | --- | --- | --- | --- |
-| 1 | Optional: enable Minitest **before** running the authentication generator (uncomment `rails/test_unit/railtie` in `config/application.rb`, add `test/test_helper.rb`), so the generator also creates `test/fixtures/users.yml` and the `sign_in_as` helper; fix the fixtures generated at W1. The specs' test examples are optional and skipped without this. | `test/` | P1 / W1 |
-| 2 | Authentication generator, plus sign-up that collects `name`: `RegistrationsController` `new`/`create` with `allow_unauthenticated_access` and `start_new_session_for`, `resource :registration, only: [ :new, :create ]`; after sign-up, redirect to `new_donor_profile_path` (Module A's form has a "Skip for now" link) | `app/controllers/registrations_controller.rb` | P2 |
-| 3 | `validates :name, presence: true` on User | `app/models/user.rb` | P2 |
-| 4 | Routes from this file; empty actions for `donor_profiles` (new, create, edit, update), `donors#index`, `blood_requests` (index, show, new, create), `responses#create` | `config/routes.rb`, `app/controllers/` | P3 |
-| 5 | `BLOOD_GROUPS` and `CITIES` | `config/initializers/constants.rb` | P4 |
-| 6 | `User` associations, right after the tables exist; announce "pull main" | `app/models/user.rb` | W1 |
-| 7 | Seeds: every user has a name; made-up phones; a couple of `available: false` donors; donor/request pairs with the same blood group and city, so D3 shows matches; future `needed_by` dates | `db/seeds.rb` | P5 |
+| 1 | Login without the generator: `has_secure_password`, session-cookie login at `/session/new`, log out, sign-up at `/registration/new` (collects name, logs in, opens the donor profile form) | P2 | Done |
+| 2 | `validates :name, presence: true` and the `User` associations | P2 / W1 | Done |
+| 3 | Tailwind removed; shared stylesheet with tokens and every component class | P3 | Done |
+| 4 | Layout: nav (signed-in and signed-out links, "My profile" target, Log out button), flash, `.container`, demo footer | P3 | Done |
+| 5 | Home page (screen 1), styled log-in and sign-up pages (screen 2), `/styleguide` | P3 | Done |
+| 6 | Routes from this file; controllers with empty actions; placeholder views | P3 | Done |
+| 7 | `BLOOD_GROUPS` and `CITIES` in `config/initializers/constants.rb` | P4 | Done |
+| 8 | Tables and migrations (walk through them at 0:00 instead of creating them live) | W1 | Done |
+| 9 | Seeds: named users with password "password", 2 unavailable donors, matching donor/request pairs, future dates, made-up phones | P5 | Done |
 
-### UI setup
-
-Everything attendees need so their pages look like [UI_DESIGN.md](../UI_DESIGN.md) by only adding class names.
-
-Status: U1, U2, U5 and U7 are done in the repo (Tailwind removed, `application.css`, home page, `/styleguide`). U3 is done except the login-dependent nav (see the TODO in `app/views/layouts/_nav.html.erb`). U4 and U6 wait for the authentication generator.
-
-| # | What | Where | Task |
-| --- | --- | --- | --- |
-| U1 | Decide on Tailwind. UI_DESIGN.md uses plain CSS, but `rails new` installed `tailwindcss-rails` and its build is loaded on every page. Either remove it (the gem, the `css:` line in `Procfile.dev`, `app/assets/tailwind/`, `app/assets/builds/tailwind.css`) or keep it and define the same component classes with `@apply` in `app/assets/tailwind/application.css`. | `Gemfile`, `Procfile.dev`, `app/assets/` | P3 |
-| U2 | Stylesheet: the design tokens on `:root`; base styles (`body` font, `--text-base` 18px, `--color-bg`, headings, links, a visible `:focus-visible` outline); every component class in the [Components](../UI_DESIGN.md#components) table; nav, flash and footer styles | `app/assets/stylesheets/application.css` | P3 |
-| U3 | Layout: replace the generated `<main class="container mx-auto mt-28 px-5 flex">` with the [shared layout](../UI_DESIGN.md#shared-layout): red nav (Blood Donor Connect, Requests, Donors, Request blood, My profile, Log out; signed out only Log in and Sign up), flash as `<div class="flash flash-notice">` / `flash-alert`, `<main class="container">`, and the demo footer. "My profile" goes to `edit_donor_profile_path` if `Current.user.donor_profile` exists, otherwise `new_donor_profile_path`. | `app/views/layouts/application.html.erb` | P3 |
-| U4 | Remove the flash blocks the auth generator put in `sessions/new.html.erb` and the passwords views, so messages do not show twice | `app/views/sessions/`, `app/views/passwords/` | P3 |
-| U5 | Home page (screen 1): `PagesController#home` with `allow_unauthenticated_access`, title, tagline, "Request blood" and "Become a donor" buttons, demo disclaimer | `app/controllers/pages_controller.rb`, `app/views/pages/home.html.erb` | P3 |
-| U6 | Sign up and log in pages (screen 2) restyled with `form-field`, `form-errors`, `btn btn-primary`, and links between the two | `app/views/registrations/new.html.erb`, `app/views/sessions/new.html.erb` | P2 / P3 |
-| U7 | A style check page or a quick look at one of each component (card with a badge, filter bar, empty state, form with errors) so attendees can see what each class looks like | Projector at 0:00 | W1 |
+There is no test suite: Minitest is not enabled, and the specs check everything by hand (console and browser).

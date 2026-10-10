@@ -2,10 +2,13 @@
   <h1 class="page-title">Blood Donor Connect</h1>
   <p>Find blood donors near you, or ask for help.</p>
 
-  <%# TODO (mentor): use new_blood_request_path and new_donor_profile_path once the routes exist.
-      Signed out, both buttons go to the log-in page. %>
+  <%# Signed out, both buttons lead to a page that asks you to log in. %>
   <div class="actions">
-    <%= link_to "Request blood", "/blood_requests/new", class: "btn btn-primary" %>
-    <%= link_to "Become a donor", "/donor_profile/new", class: "btn" %>
+    <%= link_to "Request blood", new_blood_request_path, class: "btn btn-primary" %>
+    <%= link_to "Become a donor", new_donor_profile_path, class: "btn" %>
   </div>
+
+  <% if signed_in? %>
+    <p class="meta">Signed in as <%= Current.user.name %>.</p>
+  <% end %>
 </div>

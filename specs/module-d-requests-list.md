@@ -130,7 +130,6 @@ The mentors wrote these routes. You do not edit `config/routes.rb`.
 | `app/controllers/blood_requests_controller.rb` | **only the `index` method** |
 | `app/views/blood_requests/index.html.erb` | the page title and "Request blood" button, the filter bar, the list of cards and the empty state |
 | `app/views/blood_requests/_matching_donors.html.erb` | the matching donors box (D3) |
-| `test/integration/requests_list_test.rb` | optional test (see Testing checklist) |
 
 **Do not touch:** `config/routes.rb`, `db/` (no migrations after 0:20), the `new`, `create` and `show` methods or the `private` section of `blood_requests_controller.rb`, `app/models/blood_request.rb`, `new.html.erb`, `_form.html.erb`, `show.html.erb` (Module C), and `app/models/donor_profile.rb` (Module A, except the one D3 method added together with a mentor).
 
@@ -204,7 +203,7 @@ BloodRequest.create!(user: u, patient_name: "Test Two", blood_group: "O-", units
 BloodRequest.order(created_at: :desc).map(&:hospital)  # => ["KEM Hospital", "Ruby Hall Clinic"]
 ```
 
-Then run `bin/dev`, log in and open `http://localhost:3000/blood_requests`. Expected: the "Blood requests" title, a red "Request blood" button, and two cards, KEM Hospital on top, with no patient names or phone numbers. Clicking a card opens `/blood_requests/<id>` (blank or "missing template" until Module C's `show` is merged; the URL in the address bar is what you check).
+Then run `bin/dev`, log in and open `http://localhost:3000/blood_requests`. Expected: the "Blood requests" title, a red "Request blood" button, and two cards, KEM Hospital on top, with no patient names or phone numbers. Clicking a card opens `/blood_requests/<id>` (the mentors' placeholder page until Module C's `show` is merged; the URL in the address bar is what you check).
 
 **Suggested AI prompt**
 
@@ -375,7 +374,7 @@ In the browser: open a B+ Pune request from seed data. Expected: at the bottom o
 | --- | --- |
 | Phone numbers | Neither view prints `contact_phone` or `phone`. Check by searching the page source for a known test number. |
 | Patient name | The list never prints `patient_name`; only the request page (Module C) shows it. |
-| Not logged in | `ApplicationController`'s `Authentication` concern redirects to login. You add nothing. |
+| Not logged in | The app's login check in `ApplicationController` (mentors built it) redirects to login. You add nothing. |
 | No requests at all | Empty state: "No blood requests yet." with a "Request blood" link. |
 | Filter matches nothing | Empty state: "No requests match this filter." with a "Clear filter" link. |
 | "All" chosen | `params[:blood_group]` is `""`; `.present?` is false, so no filter. |
@@ -397,38 +396,6 @@ In the browser: open a B+ Pune request from seed data. Expected: at the bottom o
 8. Compare the page with [screen 8](../UI_DESIGN.md#8-requests-list-module-d): "Blood requests" title with the red "Request blood" button, the "Blood group" filter bar, then the cards. View the page source: exactly one `<h1>`, and no Tailwind classes or `style=` attributes in your markup.
 9. After merging with seeds: open a request page → "Matching donors (N)" appears last, below Module E's button and list, and shows only same group and city, names and cities only (D3).
 10. Open a request you posted yourself while having a matching donor profile → you are not in your own list (D3).
-
-Optional Minitest test. Uses `sign_in_as` from the Rails 8.1 authentication generator's test helper.
-
-> Needs test setup by a mentor: this app was created without the test framework (`config/application.rb` has `rails/test_unit/railtie` commented out and there is no `test/` folder). Skip this if a mentor has not set it up.
-
-```ruby
-# test/integration/requests_list_test.rb
-require "test_helper"
-
-class RequestsListTest < ActionDispatch::IntegrationTest
-  setup do
-    user = users(:one)
-    sign_in_as(user)
-    BloodRequest.create!(user: user, patient_name: "A", blood_group: "B+", units_needed: 2, hospital: "Bplus Hospital",
-                         city: "Pune", needed_by: Date.tomorrow, contact_phone: "9000000001")
-    BloodRequest.create!(user: user, patient_name: "B", blood_group: "O-", units_needed: 1, hospital: "Ominus Hospital",
-                         city: "Pune", needed_by: Date.tomorrow, contact_phone: "9000000002")
-  end
-
-  test "filter shows only the chosen blood group and no phones" do
-    get blood_requests_path(blood_group: "B+")
-    assert_response :success
-    assert_includes response.body, "Bplus Hospital"
-    assert_not_includes response.body, "Ominus Hospital"
-    assert_not_includes response.body, "9000000001"
-  end
-end
-```
-
-Run it with `bin/rails test test/integration/requests_list_test.rb`.
-
-If every test fails with "uninitialized constant Donor" or "Missing model class Donor", Module E's `class_name: "User"` is not merged yet; ask a mentor.
 
 ## Working with other modules
 

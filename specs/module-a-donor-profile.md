@@ -289,7 +289,7 @@ end
 
 **AI prompt**
 
-> Rails 8.1 app with the Rails 8 authentication generator (`Current.user` is the logged-in user). Routes already exist: `resource :donor_profile, only: [:new, :create, :edit, :update]` (singular). User `has_one :donor_profile`. In `app/controllers/donor_profiles_controller.rb` fill in `new` and `create`: `new` redirects to `edit_donor_profile_path` if the user already has a profile; `create` also refuses if one exists, then uses `Current.user.build_donor_profile(donor_profile_params)`, redirects to `donors_path` with notice "You are now listed as a donor." on success and does `render :new, status: :unprocessable_entity` on failure. Use `params.expect(donor_profile: [:blood_group, :city, :phone, :available])`. Then write `new.html.erb` with one `<h1 class="page-title">Become a donor</h1>`, a render of the form with locals `donor_profile: @donor_profile, button: "Save profile"`, and below the form a "Skip for now" link to `blood_requests_path`. Write a `_form.html.erb` partial that receives `donor_profile` and `button` as locals and uses `form_with model: donor_profile, url: donor_profile_path`. At the top, only when there are errors, one `<div class="form-errors">` with a `<ul>` of `errors.full_messages`. Then, each label + input in a `<div class="form-field">`, in this order: Blood group (`f.select` with `BLOOD_GROUPS`, `include_blank: "Select"`), City (`f.select` with `CITIES`, `include_blank: "Select"`), Phone (`f.telephone_field :phone`, followed by `<p class="meta">Shown only to people whose request you respond to.</p>`). End with `f.submit button, class: "btn btn-primary"`. Use only the component classes from UI_DESIGN.md (page-title, form-field, form-errors, meta, btn btn-primary); no Tailwind, no inline styles. Do not add a wrapper div or flash messages; the layout has them. No new gems. Explain each block.
+> Rails 8.1 app with its own simple login built by mentors (`Current.user` is the logged-in user). Routes already exist: `resource :donor_profile, only: [:new, :create, :edit, :update]` (singular). User `has_one :donor_profile`. In `app/controllers/donor_profiles_controller.rb` fill in `new` and `create`: `new` redirects to `edit_donor_profile_path` if the user already has a profile; `create` also refuses if one exists, then uses `Current.user.build_donor_profile(donor_profile_params)`, redirects to `donors_path` with notice "You are now listed as a donor." on success and does `render :new, status: :unprocessable_entity` on failure. Use `params.expect(donor_profile: [:blood_group, :city, :phone, :available])`. Then write `new.html.erb` with one `<h1 class="page-title">Become a donor</h1>`, a render of the form with locals `donor_profile: @donor_profile, button: "Save profile"`, and below the form a "Skip for now" link to `blood_requests_path`. Write a `_form.html.erb` partial that receives `donor_profile` and `button` as locals and uses `form_with model: donor_profile, url: donor_profile_path`. At the top, only when there are errors, one `<div class="form-errors">` with a `<ul>` of `errors.full_messages`. Then, each label + input in a `<div class="form-field">`, in this order: Blood group (`f.select` with `BLOOD_GROUPS`, `include_blank: "Select"`), City (`f.select` with `CITIES`, `include_blank: "Select"`), Phone (`f.telephone_field :phone`, followed by `<p class="meta">Shown only to people whose request you respond to.</p>`). End with `f.submit button, class: "btn btn-primary"`. Use only the component classes from UI_DESIGN.md (page-title, form-field, form-errors, meta, btn btn-primary); no Tailwind, no inline styles. Do not add a wrapper div or flash messages; the layout has them. No new gems. Explain each block.
 
 ### A3. Edit profile with the available toggle (cut first if behind)
 
@@ -352,7 +352,7 @@ Put `before_action` near the top of the class and `set_donor_profile` under `pri
 
 | Situation | What happens | Why |
 | --- | --- | --- |
-| Not logged in | Sent to the login page | `Authentication` concern in `ApplicationController` (mentors); you add nothing |
+| Not logged in | Sent to the login page | The app's login check in `ApplicationController` (mentors built it); you add nothing |
 | Already has a profile, opens `/donor_profile/new` | Redirected to edit | Guard in `new` |
 | Already has a profile, posts the form anyway (old tab, double click) | Redirected to edit with an alert; old profile is kept | Guard in `create`; without it `build_donor_profile` would replace the old profile |
 | Two saves race at the same moment | Second one fails at the database | Unique index on `user_id` |
@@ -378,28 +378,6 @@ Manual click-through (do this after A2, and again after the merge with seed data
 - [ ] (A3) Untick available, click Update profile → `available` is `false` in the console.
 - [ ] (A3) Log in as a user with no profile, open `/donor_profile/edit` → redirected to new.
 
-Optional model test (ask a mentor before adding; it is a new file outside your folders):
-
-> Needs test setup by a mentor: this app was created without the test framework (`config/application.rb` has `rails/test_unit/railtie` commented out and there is no `test/` folder). Skip this if a mentor has not set it up.
-
-```ruby
-# test/models/donor_profile_test.rb
-require "test_helper"
-
-class DonorProfileTest < ActiveSupport::TestCase
-  test "requires a phone and a real blood group" do
-    profile = DonorProfile.new(user: users(:one), blood_group: "Z+", city: "Pune", phone: "")
-    assert_not profile.valid?
-    assert_includes profile.errors[:phone], "can't be blank"
-    assert_includes profile.errors[:blood_group], "is not included in the list"
-  end
-end
-```
-
-Run it with `bin/rails test test/models/donor_profile_test.rb`. This test does not sign in; if you add a controller test that does, use `sign_in_as(user)` from the test helper made by the Rails 8.1 authentication generator.
-
-If every test fails with "uninitialized constant Donor" or "Missing model class Donor", Module E's `class_name: "User"` is not merged yet; ask a mentor.
-
 ## Working with other modules
 
 **You depend on (mentors, before the day or at 0:00):** login and `Current.user`, the routes, the empty `DonorProfilesController`, `BLOOD_GROUPS` and `CITIES`, the `donor_profiles` table, `has_one :donor_profile` in `user.rb`, and flash messages (`notice`/`alert`) shown in the layout. If any is missing, ask a mentor; do not add it yourself.
@@ -415,7 +393,7 @@ If every test fails with "uninitialized constant Donor" or "Missing model class 
 
 **Coordination points**
 
-- Until Module B is merged, `/donors` has an empty action and no view, so redirecting there shows "missing template". Temporarily use `redirect_to root_path, notice: ...` and switch to `donors_path` after B is on main.
+- Until Module B is merged, `/donors` shows only the mentors' placeholder page ("Module B builds this page"), so after saving you land there but do not see yourself listed yet. That is fine; keep `donors_path`.
 - Do not rename fields or the partial's local; Module B and D read the same columns.
 - Merge order: **C first**, then **A**, B, D, E (see [README](README.md#shared-files-and-merge-order)). Pull main after every merge announcement.
 

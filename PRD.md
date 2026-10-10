@@ -16,7 +16,7 @@ Understanding comes first, a working app second, feature count last. When they c
 
 How the plan serves this:
 
-- The data model is built together. A mentor creates all three database tables on the projector with everyone following, so all five understand the data before working alone.
+- The data model is built together. A mentor walks through all the database tables on the projector, so all five understand the data before working alone.
 - Mentors take the complex steps (authentication, merges, contact-reveal rules, anything involving associations across slices). Attendees take the steps they can explain.
 - A slice is done when its owner has explained it to a mentor, not when it works.
 - If the team is behind at the 1:30 mark, the "cut first" tasks are dropped and the time goes to explaining and rehearsing the demo.
@@ -69,7 +69,7 @@ There is one account type. Any signed-in user can be a donor, a requester, or bo
 
 ## Data model
 
-Five tables: `users` and `sessions` come from the Rails 8 authentication generator, and the team adds `donor_profiles`, `blood_requests` and `responses`.
+Four tables: `users` (with `has_secure_password` for login), `donor_profiles`, `blood_requests` and `responses`. Mentors create all four before the day.
 
 | Model | Fields | Rules |
 | --- | --- | --- |
@@ -84,7 +84,7 @@ Shared pieces:
 - City is a dropdown from a short fixed list (for example Pune, Mumbai, Nashik, Nagpur, Kolhapur) so filters match exactly.
 - `db/seeds.rb` creates about 15 donors and 6 requests across groups and cities, so every screen has data during the demo.
 
-Stack: Ruby 4, Rails 8, SQLite, Hotwire defaults, plain CSS with shared component classes (see UI_DESIGN.md), Minitest (optional, needs enabling by a mentor). No extra gems for the must-ship scope.
+Stack: Ruby 4, Rails 8, SQLite, Hotwire defaults, plain CSS with shared component classes (see UI_DESIGN.md), no test suite. No extra gems for the must-ship scope.
 
 ## Build plan
 
@@ -93,7 +93,7 @@ Mentors build everything that is not a learning moment before the day, so the 2.
 **Before the day (mentors, about 1.5 hours)**
 
 - [ ] `rails new` with Rails 8, push to GitHub, add all 7 people as collaborators
-- [ ] Run the authentication generator and add a sign-up page (the generator only creates login)
+- [x] Login without the generator (`has_secure_password`, session-cookie login page, log out) and a sign-up page
 - [ ] Add the layout, nav bar, home page with the demo disclaimer, `BLOOD_GROUPS` and the city list; the shared stylesheet and layout from UI_DESIGN.md (nav, flash, footer, component classes); the sign-up page collects name
 - [ ] Add routes and a controller with empty actions for each slice, so nobody edits `config/routes.rb` during the build
 - [ ] Confirm the app boots on every attendee laptop
