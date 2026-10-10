@@ -1,0 +1,33 @@
+<%= form_with model: donor_profile, url: donor_profile_path do |f| %>
+  <% if donor_profile.errors.any? %>
+    <ul>
+      <% donor_profile.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  <% end %>
+
+  <div>
+    <%= f.label :blood_group %>
+    <%= f.select :blood_group, BLOOD_GROUPS, include_blank: "Choose your blood group" %>
+  </div>
+
+  <div>
+    <%= f.label :city %>
+    <%= f.select :city, CITIES, include_blank: "Choose your city" %>
+  </div>
+
+  <div>
+    <%= f.label :phone %>
+    <%= f.telephone_field :phone, placeholder: "Made-up number, e.g. 9800000001" %>
+  </div>
+
+  <% if donor_profile.persisted? %>
+    <div>
+      <%= f.check_box :available %>
+      <%= f.label :available, "Available to donate" %>
+    </div>
+  <% end %>
+
+  <%= f.submit donor_profile.persisted? ? "Update Profile" : "Save Profile" %>
+<% end %>
