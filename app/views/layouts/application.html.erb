@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title><%= content_for(:title) || "Blood Donation" %></title>
+    <title><%= content_for(:title) || "Blood Donor Connect" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Blood Donation">
+    <meta name="application-name" content="Blood Donor Connect">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -24,8 +24,23 @@
   </head>
 
   <body>
-    <main class="container mx-auto mt-28 px-5 flex">
-      <%= yield %>
+    <%= render "layouts/nav" %>
+
+    <main class="site-main">
+      <div class="container">
+        <% if notice.present? %>
+          <div class="flash flash-notice" role="status"><%= notice %></div>
+        <% end %>
+        <% if alert.present? %>
+          <div class="flash flash-alert" role="alert"><%= alert %></div>
+        <% end %>
+
+        <%= yield %>
+      </div>
     </main>
+
+    <footer class="site-footer">
+      Demo project built at Rails Girls. Not a real emergency service.
+    </footer>
   </body>
 </html>

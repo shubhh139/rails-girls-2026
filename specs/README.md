@@ -134,6 +134,8 @@ The specs rely on all of these. TASKS.md P1–P5 and W1 cover them.
 
 Everything attendees need so their pages look like [UI_DESIGN.md](../UI_DESIGN.md) by only adding class names.
 
+Status: U1, U2, U5 and U7 are done in the repo (Tailwind removed, `application.css`, home page, `/styleguide`). U3 is done except the login-dependent nav (see the TODO in `app/views/layouts/_nav.html.erb`). U4 and U6 wait for the authentication generator.
+
 | # | What | Where | Task |
 | --- | --- | --- | --- |
 | U1 | Decide on Tailwind. UI_DESIGN.md uses plain CSS, but `rails new` installed `tailwindcss-rails` and its build is loaded on every page. Either remove it (the gem, the `css:` line in `Procfile.dev`, `app/assets/tailwind/`, `app/assets/builds/tailwind.css`) or keep it and define the same component classes with `@apply` in `app/assets/tailwind/application.css`. | `Gemfile`, `Procfile.dev`, `app/assets/` | P3 |

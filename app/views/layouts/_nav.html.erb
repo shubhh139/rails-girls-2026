@@ -1,0 +1,20 @@
+<nav class="site-nav" aria-label="Main">
+  <div class="site-nav-inner">
+    <%= link_to "Blood Donor Connect", root_path, class: "site-name" %>
+
+    <%# TODO (mentor, after the authentication generator):
+        - switch these plain paths to route helpers (blood_requests_path, donors_path, ...)
+          once config/routes.rb has the module routes;
+        - wrap the links in `if authenticated?`, and show only "Log in" and "Sign up" when signed out;
+        - "My profile" goes to edit_donor_profile_path when Current.user.donor_profile exists,
+          otherwise new_donor_profile_path;
+        - "Log out" becomes button_to "Log out", session_path, method: :delete (logging out must not be a plain link). %>
+    <div class="site-nav-links">
+      <%= link_to "Requests", "/blood_requests" %>
+      <%= link_to "Donors", "/donors" %>
+      <%= link_to "Request blood", "/blood_requests/new" %>
+      <%= link_to "My profile", "/donor_profile/new" %>
+      <%= link_to "Log out", "/session" %>
+    </div>
+  </div>
+</nav>

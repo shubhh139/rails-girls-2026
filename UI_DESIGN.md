@@ -67,6 +67,8 @@ Reason: attendees are reading ERB for the first time, and `class="card"` is easi
 | `.flash.flash-alert` | Error message under the nav | Uses the error colours |
 | `.empty-state` | Message when a list has no rows | Centred, muted, with one link to the next action |
 
+Open `/styleguide` in the running app to see every class rendered, with HTML you can copy.
+
 ## Shared layout
 
 Built by a mentor in `app/views/layouts/application.html.erb`. Attendees do not edit it.

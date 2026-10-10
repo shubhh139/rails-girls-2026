@@ -1,0 +1,11 @@
+<div class="hero">
+  <h1 class="page-title">Blood Donor Connect</h1>
+  <p>Find blood donors near you, or ask for help.</p>
+
+  <%# TODO (mentor): use new_blood_request_path and new_donor_profile_path once the routes exist.
+      Signed out, both buttons go to the log-in page. %>
+  <div class="actions">
+    <%= link_to "Request blood", "/blood_requests/new", class: "btn btn-primary" %>
+    <%= link_to "Become a donor", "/donor_profile/new", class: "btn" %>
+  </div>
+</div>

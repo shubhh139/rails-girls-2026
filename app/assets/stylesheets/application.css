@@ -1,10 +1,349 @@
 /*
- * This is a manifest file that'll be compiled into application.css.
+ * Blood Donor Connect — shared stylesheet.
  *
- * With Propshaft, assets are served efficiently without preprocessing steps. You can still include
- * application-wide styles in this file, but keep in mind that CSS precedence will follow the standard
- * cascading order, meaning styles declared later in the document or manifest will override earlier ones,
- * depending on specificity.
- *
- * Consider organizing styles into separate files for maintainability.
+ * Every page is built from the component classes below (see UI_DESIGN.md).
+ * Attendees use these class names in their views and do not write new CSS.
  */
+
+/* ---------- Design tokens ---------- */
+
+:root {
+  --color-primary: #b3261e;     /* blood red: nav bar, primary buttons */
+  --color-primary-dark: #8c1d18;
+  --color-text: #1f1f1f;
+  --color-muted: #5f6368;
+  --color-bg: #faf8f7;
+  --color-surface: #ffffff;
+  --color-border: #e0dcd9;
+  --color-success-bg: #e6f4ea;
+  --color-success-text: #1e6b34;
+  --color-error-bg: #fce8e6;
+  --color-error-text: #a50e0e;
+
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --text-base: 18px;
+  --text-small: 15px;
+  --text-h1: 32px;
+  --text-h2: 22px;
+
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 40px;
+  --radius: 8px;
+  --page-width: 760px;
+}
+
+/* ---------- Base ---------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+h1,
+h2 {
+  margin: 0 0 var(--space-2);
+  line-height: 1.25;
+}
+
+h2 {
+  font-size: var(--text-h2);
+  margin-top: var(--space-4);
+}
+
+p {
+  margin: 0 0 var(--space-1);
+}
+
+a {
+  color: var(--color-primary);
+}
+
+a:hover {
+  color: var(--color-primary-dark);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+/* ---------- Layout: nav, flash, main, footer ---------- */
+
+.site-nav {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.site-nav-inner {
+  max-width: var(--page-width);
+  margin: 0 auto;
+  padding: var(--space-2);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+}
+
+.site-nav a {
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.site-nav a:hover {
+  text-decoration: underline;
+}
+
+.site-nav a:focus-visible {
+  outline-color: #ffffff;
+}
+
+.site-name {
+  font-size: var(--text-h2);
+  margin-right: auto;
+}
+
+.site-nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+}
+
+.site-main {
+  flex: 1;
+  width: 100%;
+  padding-top: var(--space-3);
+  padding-bottom: var(--space-4);
+}
+
+.site-footer {
+  border-top: 1px solid var(--color-border);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  text-align: center;
+  padding: var(--space-2);
+}
+
+/* ---------- Components (see UI_DESIGN.md) ---------- */
+
+/* Page wrapper inside the layout */
+.container {
+  max-width: var(--page-width);
+  margin: 0 auto;
+  padding: 0 var(--space-2);
+}
+
+/* The one <h1> on each page */
+.page-title {
+  font-size: var(--text-h1);
+}
+
+/* One donor, one request, one response */
+.card {
+  display: block;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-2);
+  color: inherit;
+  text-decoration: none;
+}
+
+a.card:hover {
+  border-color: var(--color-primary);
+  color: inherit;
+}
+
+.card p:last-child {
+  margin-bottom: 0;
+}
+
+/* Wrapper around a list of cards */
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* Secondary button, or a link styled as a button */
+.btn {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn:hover {
+  border-color: var(--color-text);
+  color: var(--color-text);
+}
+
+/* The one main action on a page */
+.btn.btn-primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.btn.btn-primary:hover {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+  color: #ffffff;
+}
+
+/* A label plus its input */
+.form-field {
+  margin-bottom: var(--space-2);
+}
+
+.form-field label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.form-field input[type="text"],
+.form-field input[type="email"],
+.form-field input[type="password"],
+.form-field input[type="tel"],
+.form-field input[type="number"],
+.form-field input[type="date"],
+.form-field select,
+.form-field textarea {
+  width: 100%;
+  max-width: 420px;
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.form-field textarea {
+  min-height: 96px;
+}
+
+/* A checkbox sits next to its label instead of above it */
+.form-field input[type="checkbox"] + label,
+.form-field label:has(input[type="checkbox"]) {
+  display: inline;
+  font-weight: normal;
+}
+
+/* Validation errors at the top of a form */
+.form-errors {
+  background: var(--color-error-bg);
+  color: var(--color-error-text);
+  border-radius: var(--radius);
+  padding: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.form-errors ul {
+  margin: 0;
+  padding-left: var(--space-3);
+}
+
+/* The dropdowns and button above a list */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.filter-bar label {
+  font-weight: 600;
+}
+
+.filter-bar select {
+  padding: 6px var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+/* Blood group: always shown as text */
+.badge {
+  display: inline-block;
+  min-width: 3em;
+  padding: 2px var(--space-1);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius);
+  color: var(--color-primary);
+  font-weight: 700;
+  text-align: center;
+}
+
+/* Secondary line of text in a card */
+.meta {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+/* Messages under the nav */
+.flash {
+  border-radius: var(--radius);
+  padding: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.flash.flash-notice {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.flash.flash-alert {
+  background: var(--color-error-bg);
+  color: var(--color-error-text);
+}
+
+/* When a list has no rows */
+.empty-state {
+  text-align: center;
+  color: var(--color-muted);
+  padding: var(--space-4) var(--space-2);
+}
+
+/* ---------- Home page ---------- */
+
+.hero {
+  text-align: center;
+  padding: var(--space-4) 0;
+}
+
+.hero .actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
