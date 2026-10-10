@@ -1,5 +1,28 @@
 <h1 class="page-title">Donors</h1>
 
-<div class="empty-state">
-  <p>Module B builds this page. See <code>specs/module-b-donor-directory.md</code>.</p>
-</div>
+<%= form_with url: donors_path, method: :get, class: "filter-bar" do |f| %>
+  <%= f.label :blood_group, "Blood group" %>
+  <%= f.select :blood_group, BLOOD_GROUPS, { include_blank: "All", selected: params[:blood_group] } %>
+
+  <%= f.label :city, "City" %>
+  <%= f.select :city, CITIES, { include_blank: "All", selected: params[:city] } %>
+
+  <%= f.submit "Filter", name: nil, class: "btn" %>
+<% end %>
+
+<% if @donors.present? %>
+  <div class="card-list">
+    <% @donors.each do |donor| %>
+      <div class="card">
+        <span class="badge"><%= donor.blood_group %></span>
+        <%= donor.user.name %>
+        <p class="meta"><%= donor.city %></p>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <div class="empty-state">
+    <p>No donors match this filter.</p>
+    <%= link_to "Clear filter", donors_path %>
+  </div>
+<% end %>

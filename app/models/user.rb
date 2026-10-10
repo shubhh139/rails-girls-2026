@@ -1,7 +1,7 @@
 class User < ApplicationRecord
   has_secure_password
 
-  has_one  :donor_profile, dependent: :destroy
+  has_one :donor_profile, dependent: :destroy
   has_many :blood_requests, dependent: :destroy
   has_many :responses, foreign_key: :donor_id, dependent: :destroy
 

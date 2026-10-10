@@ -2,6 +2,8 @@ Rails.application.routes.draw do
   # Home page (UI_DESIGN.md screen 1)
   root "pages#home"
 
+  resources :donors, only: [:index]
+
   # Every component class from UI_DESIGN.md, for reference while building
   get "styleguide" => "pages#styleguide"
 
