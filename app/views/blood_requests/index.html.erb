@@ -1,5 +1,39 @@
 <h1 class="page-title">Blood requests</h1>
 
-<div class="empty-state">
-  <p>Module D builds this page. See <code>specs/module-d-requests-list.md</code>.</p>
-</div>
+<%= link_to "Request blood", new_blood_request_path, class: "btn btn-primary" %>
+
+<%= form_with url: blood_requests_path, method: :get, class: "filter-bar" do |form| %>
+  <%= form.label :blood_group, "Blood group" %>
+  <%= form.select :blood_group,
+                  BLOOD_GROUPS,
+                  { include_blank: "All groups", selected: params[:blood_group] } %>
+  <%= form.submit "Filter", name: nil, class: "btn" %>
+<% end %>
+
+<% if @blood_requests.present? %>
+  <div class="card-list">
+    <% @blood_requests.each do |blood_request| %>
+      <%= link_to blood_request_path(blood_request), class: "card" do %>
+        <span class="badge"><%= blood_request.blood_group %></span>
+        <p class="meta">
+          <%= pluralize(blood_request.units_needed, "unit") %>
+          <span><%= blood_request.hospital %>, <%= blood_request.city %></span>
+        </p>
+        <p class="meta">Needed by <%= blood_request.needed_by.strftime("%d %b %Y") %></p>
+        <span>View ›</span>
+      <% end %>
+    <% end %>
+  </div>
+<% else %>
+  <% if params[:blood_group].present? %>
+    <div class="empty-state">
+      <p>No <%= params[:blood_group] %> requests right now.</p>
+      <%= link_to "Show all", blood_requests_path %>
+    </div>
+  <% else %>
+    <div class="empty-state">
+      <p>No blood requests yet.</p>
+      <%= link_to "Request blood", new_blood_request_path %>
+    </div>
+  <% end %>
+<% end %>
