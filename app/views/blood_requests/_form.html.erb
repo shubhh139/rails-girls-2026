@@ -1,0 +1,53 @@
+<%= form_with model: blood_request do |f| %>
+  <% if blood_request.errors.any? %>
+    <div class="form-errors">
+      <ul>
+        <% blood_request.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="form-field">
+    <%= f.label :patient_name %>
+    <%= f.text_field :patient_name %>
+  </div>
+
+  <div class="form-field">
+    <%= f.label :blood_group %>
+    <%= f.select :blood_group, BLOOD_GROUPS, include_blank: "Choose…" %>
+  </div>
+
+  <div class="form-field">
+    <%= f.label :units_needed %>
+    <%= f.number_field :units_needed, min: 1 %>
+  </div>
+
+  <div class="form-field">
+    <%= f.label :hospital %>
+    <%= f.text_field :hospital %>
+  </div>
+
+  <div class="form-field">
+    <%= f.label :city %>
+    <%= f.select :city, CITIES, include_blank: "Choose…" %>
+  </div>
+
+  <div class="form-field">
+    <%= f.label :needed_by %>
+    <%= f.date_field :needed_by %>
+  </div>
+
+  <div class="form-field">
+    <%= f.label :contact_phone %>
+    <%= f.telephone_field :contact_phone %>
+  </div>
+
+  <div class="form-field">
+    <%= f.label :note, "Note (optional)" %>
+    <%= f.text_area :note, rows: 3 %>
+  </div>
+
+  <%= f.submit "Post request", class: "btn btn-primary" %>
+<% end %>

@@ -1,5 +1,14 @@
-<h1 class="page-title">Blood request</h1>
+<h1 class="page-title"><span class="badge"><%= @blood_request.blood_group %></span> <%= pluralize(@blood_request.units_needed, "unit") %> needed for <%= @blood_request.patient_name %></h1>
 
-<div class="empty-state">
-  <p>Module C builds this page. See <code>specs/module-c-blood-requests.md</code>.</p>
-</div>
+<p class="meta"><%= @blood_request.hospital %>, <%= @blood_request.city %></p>
+<p>Needed by <%= @blood_request.needed_by.strftime("%d %b %Y") %></p>
+
+<% if @blood_request.note.present? %>
+  <p>Note: <%= @blood_request.note %></p>
+<% end %>
+
+<%# ===== Modules D and E: add your render lines below. Do not edit above this line. ===== %>
+<%# Module E: render "responses/button", blood_request: @blood_request %>
+<%# Module E: render "responses/list", blood_request: @blood_request %>
+<%# Module D: render "blood_requests/matching_donors", blood_request: @blood_request %>
+<%# ===== end of shared spot ===== %>
