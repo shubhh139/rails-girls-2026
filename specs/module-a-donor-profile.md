@@ -4,16 +4,43 @@ Oct 10, 2026 · Vishwajeetsingh Desurkar
 
 You build the form where a signed-in user becomes a donor by saving a blood group, city and phone, plus an edit page to change them and switch "available to donate" on or off.
 
-See also: [ATTENDEE_TASKS.md](../ATTENDEE_TASKS.md) · [MVC_GUIDE.md](../MVC_GUIDE.md) · [DB_SCHEMA.md](../DB_SCHEMA.md)
+See also: [ATTENDEE_TASKS.md](../ATTENDEE_TASKS.md) · [MVC_GUIDE.md](../MVC_GUIDE.md) · [DB_SCHEMA.md](../DB_SCHEMA.md) · [UI_DESIGN.md](../UI_DESIGN.md)
 
 ## What you are building
 
-A signed-in user opens **Become a donor** (`/donor_profile/new`), picks a blood group and a city from dropdowns, types a phone number and clicks **Save**. The profile is saved for that user, and the app takes them to the donors list, where they now appear.
+A signed-in user opens **Become a donor** (`/donor_profile/new`), picks a blood group and a city from dropdowns, types a phone number and clicks **Save profile**. The profile is saved for that user, and the app takes them to the donors list with the message "You are now listed as a donor.", where they now appear. Right after sign-up, the mentor's registration controller sends new users to this form; a **Skip for now** link below it goes to the requests list.
 
 | Screen | URL | What it shows |
 | --- | --- | --- |
-| New profile | `/donor_profile/new` | Blood group dropdown, city dropdown, phone field, Save button, error messages |
-| Edit profile (A3, cut first) | `/donor_profile/edit` | The same form, filled in, plus an "Available to donate" checkbox |
+| New profile ([UI_DESIGN screen 3](../UI_DESIGN.md#3-new-donor-profile-module-a)) | `/donor_profile/new` | Heading "Become a donor", blood group dropdown, city dropdown, phone field with a hint, "Save profile" button, error box, "Skip for now" link |
+| Edit profile, A3, cut first ([UI_DESIGN screen 4](../UI_DESIGN.md#4-edit-donor-profile-module-a-cut-first)) | `/donor_profile/edit` | Heading "My profile", the same form filled in, plus an "I am available to donate" checkbox and an "Update profile" button |
+
+Screen 3, new donor profile (from UI_DESIGN.md):
+
+```
+  Become a donor
+
+  [form errors, if any]
+
+  Blood group   [ Select  v ]
+  City          [ Select  v ]
+  Phone         [______________]
+                Shown only to people whose request you respond to.
+
+  [ Save profile ]
+```
+
+Screen 4, edit donor profile: the same form as screen 3, plus:
+
+```
+  [x] I am available to donate
+
+  [ Update profile ]
+```
+
+The edit page is where the nav's "My profile" link leads once you have a profile, so its heading is "My profile" (every page's `<h1>` matches the nav link that leads there).
+
+You build pages only from the component classes in [UI_DESIGN.md](../UI_DESIGN.md#components) (`page-title`, `form-field`, `form-errors`, `btn btn-primary`, `meta`). No Tailwind, no inline styles, no new CSS. The mentor's layout already wraps your page in `.container` and shows the flash message, so your views add neither.
 
 Each user has at most **one** donor profile. That is why the URL has no id: "the donor profile" always means *your own* profile.
 
@@ -23,10 +50,11 @@ In the demo journey you are **step 1**: "Sign up and create a donor profile". St
 
 - [ ] **A1.** In `bin/rails console`, a profile with a missing phone, a blood group not in `BLOOD_GROUPS` or a city not in `CITIES` is rejected (`valid?` is `false`).
 - [ ] **A1.** A second profile for the same user is rejected.
-- [ ] **A2.** A new user can sign up, fill the form and see the profile saved (a "saved" message, and the row exists in the console).
+- [ ] **A2.** A new user can sign up, fill the form and see the profile saved (the flash "You are now listed as a donor." on the donors list, and the row exists in the console).
 - [ ] **A2.** Submitting the form with the phone left empty shows an error and keeps the other choices.
 - [ ] **A2.** Opening `/donor_profile/new` when you already have a profile sends you to the edit page.
-- [ ] **A3 (cut first).** Unticking "Available to donate" on the edit page and saving changes `available` to `false` in the database.
+- [ ] **A2.** The new page matches [UI_DESIGN screen 3](../UI_DESIGN.md#3-new-donor-profile-module-a): one `<h1 class="page-title">Become a donor</h1>`, fields in the order Blood group, City, Phone (each in a `form-field`), the phone hint in `meta`, errors in `form-errors`, a "Save profile" button with `btn btn-primary`, and a "Skip for now" link.
+- [ ] **A3 (cut first).** Unticking "I am available to donate" on the edit page and saving changes `available` to `false` in the database. The page heading is "My profile" and the button says "Update profile".
 - [ ] **A4.** You have walked a mentor through your model, controller and view.
 
 ## Concepts you will use
@@ -40,7 +68,7 @@ In the demo journey you are **step 1**: "Sign up and create a donor profile". St
 | `Current.user` | The logged-in user | Every action |
 | Strong params (`params.expect`) | The list of form fields allowed into the model | `donor_profile_params` |
 | `form_with` + form helpers | Builds an HTML form tied to a model | `_form.html.erb` |
-| Partial with locals | A reusable view piece that gets its data passed in | `_form` shared by `new` and `edit` |
+| Partial with locals | A reusable view piece that gets its data passed in | `_form` shared by `new` and `edit`, with the profile and the button text passed in |
 | `redirect_to` vs `render` | Go to another URL vs. show a view again | `create` and `update` |
 | `before_action` | A method that runs before some actions | Loading the profile for `edit` and `update` |
 
@@ -53,6 +81,8 @@ In the demo journey you are **step 1**: "Sign up and create a donor profile". St
 **Strong params.** `params.expect(donor_profile: [ :blood_group, :city, :phone, :available ])` says "the form must have a `donor_profile` section, and only these four fields get through". A sneaky extra field like `user_id` is dropped. See [The Controller](../MVC_GUIDE.md#the-controller).
 
 **Form helpers.** `form_with model:` fills in values and errors from the object. `f.select` makes a dropdown, so blood group and city are never typed freely. See [Forms](../MVC_GUIDE.md#forms).
+
+**Component classes.** Instead of writing CSS, you put ready-made class names from [UI_DESIGN.md](../UI_DESIGN.md#components) on your HTML: `page-title` on the heading, `form-field` around each label and input, `form-errors` on the error box, `meta` on the small hint text, and `btn btn-primary` on the one main button. A mentor already wrote the CSS for them, so every module's pages look like one app.
 
 ## Data you work with
 
@@ -166,7 +196,7 @@ class DonorProfilesController < ApplicationController
     @donor_profile = Current.user.build_donor_profile(donor_profile_params)
 
     if @donor_profile.save
-      redirect_to donors_path, notice: "Your donor profile is saved."
+      redirect_to donors_path, notice: "You are now listed as a donor."
     else
       render :new, status: :unprocessable_entity
     end
@@ -184,44 +214,50 @@ end
 
 ```erb
 <%# app/views/donor_profiles/new.html.erb %>
-<h1>Become a donor</h1>
-<%= render "form", donor_profile: @donor_profile %>
+<h1 class="page-title">Become a donor</h1>
+
+<%= render "form", donor_profile: @donor_profile, button: "Save profile" %>
+
+<p><%= link_to "Skip for now", blood_requests_path %></p>
 ```
 
 ```erb
 <%# app/views/donor_profiles/_form.html.erb %>
 <%= form_with model: donor_profile, url: donor_profile_path do |f| %>
   <% if donor_profile.errors.any? %>
-    <ul class="errors">
-      <% donor_profile.errors.full_messages.each do |message| %>
-        <li><%= message %></li>
-      <% end %>
-    </ul>
-  <% end %>
-
-  <div>
-    <%= f.label :blood_group %>
-    <%= f.select :blood_group, BLOOD_GROUPS, include_blank: "Choose your blood group" %>
-  </div>
-
-  <div>
-    <%= f.label :city %>
-    <%= f.select :city, CITIES, include_blank: "Choose your city" %>
-  </div>
-
-  <div>
-    <%= f.label :phone %>
-    <%= f.telephone_field :phone, placeholder: "Made-up number, e.g. 9800000001" %>
-  </div>
-
-  <% if donor_profile.persisted? %>
-    <div>
-      <%= f.check_box :available %>
-      <%= f.label :available, "Available to donate" %>
+    <div class="form-errors">
+      <ul>
+        <% donor_profile.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
     </div>
   <% end %>
 
-  <%= f.submit "Save" %>
+  <div class="form-field">
+    <%= f.label :blood_group %>
+    <%= f.select :blood_group, BLOOD_GROUPS, include_blank: "Select" %>
+  </div>
+
+  <div class="form-field">
+    <%= f.label :city %>
+    <%= f.select :city, CITIES, include_blank: "Select" %>
+  </div>
+
+  <div class="form-field">
+    <%= f.label :phone %>
+    <%= f.telephone_field :phone %>
+    <p class="meta">Shown only to people whose request you respond to.</p>
+  </div>
+
+  <% if donor_profile.persisted? %>
+    <div class="form-field">
+      <%= f.check_box :available %>
+      <%= f.label :available, "I am available to donate" %>
+    </div>
+  <% end %>
+
+  <%= f.submit button, class: "btn btn-primary" %>
 <% end %>
 ```
 
@@ -232,23 +268,28 @@ end
 - `Current.user.build_donor_profile(...)`: makes an unsaved profile with `user_id` set to the logged-in user and fills in the allowed form fields.
 - `if @donor_profile.save`: runs your A1 validations. Success: **redirect** (so refreshing does not resubmit). Failure: **render** `new` again with status 422; `@donor_profile` still holds the typed values and the errors.
 - `donor_profile_params`: strong params. Only these four fields reach the model.
-- `new.html.erb` passes the profile into the partial as a **local** (`donor_profile:`), so `_form` does not depend on an `@` variable.
+- `new.html.erb` has the page's one heading, `<h1 class="page-title">Become a donor</h1>`. It does not add a wrapper `div` or print the flash; the mentor's layout does both.
+- `new.html.erb` passes two **locals** into the partial: the profile (`donor_profile:`), so `_form` does not depend on an `@` variable, and the button text (`button: "Save profile"`). The same partial is used on the edit page with `button: "Update profile"`, so the partial just prints whatever text it is given: `f.submit button, class: "btn btn-primary"`. Passing it in is clearer than guessing inside the partial.
+- The "Skip for now" link sits below the form, outside it, and goes to `blood_requests_path`. New users land here straight after sign-up and may not want to be donors yet.
 - `form_with model: donor_profile, url: donor_profile_path`: the `url:` is required because the route is singular. Without it Rails guesses a plural URL (`/donor_profiles`) that does not exist. On the edit page Rails would guess `/donor_profile.5`, which is also wrong, so `url:` is needed on both pages. Rails still picks the verb: POST for a new record, PATCH for a saved one.
-- `f.select ..., include_blank:` adds an empty first option, so the user must choose and a blank choice triggers your validation.
-- `f.telephone_field` is a text input with `type="tel"`, so phones show a number keypad.
+- The error box: when there are errors, one `<div class="form-errors">` at the top holds a `<ul>` with every message from `errors.full_messages`. When there are none, nothing is printed.
+- Each label and its input sit together inside a `<div class="form-field">`, which puts the label above the input with space below. `f.label :blood_group` prints the visible label "Blood group" and links it to the dropdown, so clicking the label focuses the field.
+- `f.select ..., include_blank: "Select"` adds a first option "Select" with an empty value, so the user must choose and a blank choice triggers your validation.
+- `f.telephone_field` is a text input with `type="tel"`, so phones show a number keypad. The `<p class="meta">` under it is the small grey hint from the design. Use made-up numbers such as `9800000001`.
 - The checkbox only shows when the profile is already saved (`persisted?`), which means only on the edit page.
+- `class: "btn btn-primary"` makes the submit the red main button. There is only one per form.
 
 **Check it works**
 
-1. Sign up as a new user, then go to `/donor_profile/new`. You see two dropdowns and a phone field.
-2. Leave the phone empty and click Save. You see "Phone can't be blank" and your dropdown choices are still selected.
-3. Fill in the phone and click Save. You land on `/donors` with "Your donor profile is saved." (until Module B merges, see [Working with other modules](#working-with-other-modules)).
+1. Sign up as a new user; you land on `/donor_profile/new`. You see the heading "Become a donor", two dropdowns showing "Select", a phone field with the hint below it, a "Save profile" button and a "Skip for now" link.
+2. Leave the phone empty and click Save profile. You see "Phone can't be blank" in the red error box at the top, and your dropdown choices are still selected.
+3. Fill in the phone and click Save profile. You land on `/donors` with "You are now listed as a donor." (until Module B merges, see [Working with other modules](#working-with-other-modules)).
 4. In the console: `User.last.donor_profile` shows your row with `available: true`.
 5. Visit `/donor_profile/new` again. You are sent to `/donor_profile/edit`.
 
 **AI prompt**
 
-> Rails 8.1 app with the Rails 8 authentication generator (`Current.user` is the logged-in user). Routes already exist: `resource :donor_profile, only: [:new, :create, :edit, :update]` (singular). User `has_one :donor_profile`. In `app/controllers/donor_profiles_controller.rb` fill in `new` and `create`: `new` redirects to `edit_donor_profile_path` if the user already has a profile; `create` also refuses if one exists, then uses `Current.user.build_donor_profile(donor_profile_params)`, redirects to `donors_path` with notice "Your donor profile is saved." on success and does `render :new, status: :unprocessable_entity` on failure. Use `params.expect(donor_profile: [:blood_group, :city, :phone, :available])`. Then write `new.html.erb` and a `_form.html.erb` partial that receives `donor_profile` as a local, uses `form_with model: donor_profile, url: donor_profile_path`, `f.select` with `BLOOD_GROUPS` and `CITIES` and `include_blank`, `f.telephone_field :phone`, and lists error messages. No new gems. Explain each block.
+> Rails 8.1 app with its own simple login built by mentors (`Current.user` is the logged-in user). Routes already exist: `resource :donor_profile, only: [:new, :create, :edit, :update]` (singular). User `has_one :donor_profile`. In `app/controllers/donor_profiles_controller.rb` fill in `new` and `create`: `new` redirects to `edit_donor_profile_path` if the user already has a profile; `create` also refuses if one exists, then uses `Current.user.build_donor_profile(donor_profile_params)`, redirects to `donors_path` with notice "You are now listed as a donor." on success and does `render :new, status: :unprocessable_entity` on failure. Use `params.expect(donor_profile: [:blood_group, :city, :phone, :available])`. Then write `new.html.erb` with one `<h1 class="page-title">Become a donor</h1>`, a render of the form with locals `donor_profile: @donor_profile, button: "Save profile"`, and below the form a "Skip for now" link to `blood_requests_path`. Write a `_form.html.erb` partial that receives `donor_profile` and `button` as locals and uses `form_with model: donor_profile, url: donor_profile_path`. At the top, only when there are errors, one `<div class="form-errors">` with a `<ul>` of `errors.full_messages`. Then, each label + input in a `<div class="form-field">`, in this order: Blood group (`f.select` with `BLOOD_GROUPS`, `include_blank: "Select"`), City (`f.select` with `CITIES`, `include_blank: "Select"`), Phone (`f.telephone_field :phone`, followed by `<p class="meta">Shown only to people whose request you respond to.</p>`). End with `f.submit button, class: "btn btn-primary"`. Use only the component classes from UI_DESIGN.md (page-title, form-field, form-errors, meta, btn btn-primary); no Tailwind, no inline styles. Do not add a wrapper div or flash messages; the layout has them. No new gems. Explain each block.
 
 ### A3. Edit profile with the available toggle (cut first if behind)
 
@@ -279,8 +320,9 @@ end
 
 ```erb
 <%# app/views/donor_profiles/edit.html.erb %>
-<h1>Your donor profile</h1>
-<%= render "form", donor_profile: @donor_profile %>
+<h1 class="page-title">My profile</h1>
+
+<%= render "form", donor_profile: @donor_profile, button: "Update profile" %>
 ```
 
 Put `before_action` near the top of the class and `set_donor_profile` under `private`, next to `donor_profile_params`.
@@ -291,24 +333,26 @@ Put `before_action` near the top of the class and `set_donor_profile` under `pri
 - `set_donor_profile` always loads **your own** profile through `Current.user`, never by id. If you have none, it redirects to the new form; a redirect inside a `before_action` stops the action from running.
 - `edit` is empty on purpose: `@donor_profile` is already set, and Rails renders `edit.html.erb` by itself.
 - `update` works like `create`: `update` runs validations and saves; success redirects back to the edit page with a notice (not the donors list, because an unavailable donor disappears from that list, which is confusing), failure re-renders `edit` with errors.
+- `edit.html.erb` reuses the same `_form`, only with a different heading ("My profile", because the nav's "My profile" link leads here once you have a profile) and button text (`button: "Update profile"`). There is no "Skip for now" link on this page.
+- The checkbox sits in its own `form-field` with the label "I am available to donate". It appears here because the profile is `persisted?`.
 - The checkbox: `f.check_box :available` sends `"1"` when ticked and a hidden `"0"` when unticked, and Rails turns those into `true`/`false`. That is why `:available` is in the strong params.
 
 **Check it works**
 
-1. As a user with a profile, open `/donor_profile/edit`. The form is filled in and "Available to donate" is ticked.
-2. Untick it and click Save. You stay on `/donor_profile/edit` with "Your donor profile is updated." In the console, `User.last.donor_profile.available` is `false`.
-3. Clear the phone and Save. The error shows and nothing changes in the database.
+1. As a user with a profile, click "My profile" in the nav (or open `/donor_profile/edit`). The heading is "My profile", the form is filled in and "I am available to donate" is ticked.
+2. Untick it and click Update profile. You stay on `/donor_profile/edit` with "Your donor profile is updated." In the console, `User.last.donor_profile.available` is `false`.
+3. Clear the phone and click Update profile. The error box shows and nothing changes in the database.
 4. As a user with no profile, open `/donor_profile/edit`. You are sent to `/donor_profile/new`.
 
 **AI prompt**
 
-> In the same `DonorProfilesController` (Rails 8.1, singular `resource :donor_profile`), add `edit` and `update`. Use a `before_action` that loads `Current.user.donor_profile` and redirects to `new_donor_profile_path` if it is nil. `update` redirects to `edit_donor_profile_path` with notice "Your donor profile is updated." on success and renders `:edit` with `status: :unprocessable_entity` on failure. Add `edit.html.erb` that renders the existing `_form` partial with the local `donor_profile: @donor_profile`. The form already shows an `available` checkbox when the profile is persisted. Explain how the checkbox becomes true/false.
+> In the same `DonorProfilesController` (Rails 8.1, singular `resource :donor_profile`), add `edit` and `update`. Use a `before_action` that loads `Current.user.donor_profile` and redirects to `new_donor_profile_path` if it is nil. `update` redirects to `edit_donor_profile_path` with notice "Your donor profile is updated." on success and renders `:edit` with `status: :unprocessable_entity` on failure. Add `edit.html.erb` with one `<h1 class="page-title">My profile</h1>` that renders the existing `_form` partial with the locals `donor_profile: @donor_profile, button: "Update profile"`. The form already shows an `available` checkbox, inside a `<div class="form-field">` with the label "I am available to donate", when the profile is persisted. Use only the component classes from UI_DESIGN.md (page-title, form-field, form-errors, btn btn-primary); no Tailwind, no inline styles. Explain how the checkbox becomes true/false.
 
 ## Privacy and edge cases
 
 | Situation | What happens | Why |
 | --- | --- | --- |
-| Not logged in | Sent to the login page | `Authentication` concern in `ApplicationController` (mentors); you add nothing |
+| Not logged in | Sent to the login page | The app's login check in `ApplicationController` (mentors built it); you add nothing |
 | Already has a profile, opens `/donor_profile/new` | Redirected to edit | Guard in `new` |
 | Already has a profile, posts the form anyway (old tab, double click) | Redirected to edit with an alert; old profile is kept | Guard in `create`; without it `build_donor_profile` would replace the old profile |
 | Two saves race at the same moment | Second one fails at the database | Unique index on `user_id` |
@@ -324,35 +368,15 @@ Put `before_action` near the top of the class and `set_donor_profile` under `pri
 Manual click-through (do this after A2, and again after the merge with seed data):
 
 - [ ] Logged out, open `/donor_profile/new` → login page.
-- [ ] Sign up a new user, open `/donor_profile/new` → empty form with two dropdowns and a phone field.
-- [ ] Submit with nothing chosen → errors for blood group, city and phone.
+- [ ] Sign up a new user → you land on `/donor_profile/new`: empty form with two dropdowns and a phone field.
+- [ ] The page matches [UI_DESIGN screen 3](../UI_DESIGN.md#3-new-donor-profile-module-a): heading "Become a donor" with `page-title`, fields Blood group, City, Phone in that order, each in a `form-field`, phone hint in `meta`, button "Save profile" with `btn btn-primary`, and a "Skip for now" link that opens the requests list. No Tailwind classes or `style=` in your views.
+- [ ] Submit with nothing chosen → errors for blood group, city and phone, in one `form-errors` box at the top.
 - [ ] Submit with phone empty only → "Phone can't be blank", dropdown choices kept.
-- [ ] Submit a complete form → redirected to `/donors` with "Your donor profile is saved."; you appear in the list without a phone number.
+- [ ] Submit a complete form → redirected to `/donors` with "You are now listed as a donor."; you appear in the list without a phone number.
 - [ ] Open `/donor_profile/new` again → redirected to edit.
-- [ ] (A3) Untick available, save → `available` is `false` in the console.
+- [ ] (A3) The edit page matches [UI_DESIGN screen 4](../UI_DESIGN.md#4-edit-donor-profile-module-a-cut-first): heading "My profile", checkbox "I am available to donate", button "Update profile".
+- [ ] (A3) Untick available, click Update profile → `available` is `false` in the console.
 - [ ] (A3) Log in as a user with no profile, open `/donor_profile/edit` → redirected to new.
-
-Optional model test (ask a mentor before adding; it is a new file outside your folders):
-
-> Needs test setup by a mentor: this app was created without the test framework (`config/application.rb` has `rails/test_unit/railtie` commented out and there is no `test/` folder). Skip this if a mentor has not set it up.
-
-```ruby
-# test/models/donor_profile_test.rb
-require "test_helper"
-
-class DonorProfileTest < ActiveSupport::TestCase
-  test "requires a phone and a real blood group" do
-    profile = DonorProfile.new(user: users(:one), blood_group: "Z+", city: "Pune", phone: "")
-    assert_not profile.valid?
-    assert_includes profile.errors[:phone], "can't be blank"
-    assert_includes profile.errors[:blood_group], "is not included in the list"
-  end
-end
-```
-
-Run it with `bin/rails test test/models/donor_profile_test.rb`. This test does not sign in; if you add a controller test that does, use `sign_in_as(user)` from the test helper made by the Rails 8.1 authentication generator.
-
-If every test fails with "uninitialized constant Donor" or "Missing model class Donor", Module E's `class_name: "User"` is not merged yet; ask a mentor.
 
 ## Working with other modules
 
@@ -369,7 +393,7 @@ If every test fails with "uninitialized constant Donor" or "Missing model class 
 
 **Coordination points**
 
-- Until Module B is merged, `/donors` has an empty action and no view, so redirecting there shows "missing template". Temporarily use `redirect_to root_path, notice: ...` and switch to `donors_path` after B is on main.
+- Until Module B is merged, `/donors` shows only the mentors' placeholder page ("Module B builds this page"), so after saving you land there but do not see yourself listed yet. That is fine; keep `donors_path`.
 - Do not rename fields or the partial's local; Module B and D read the same columns.
 - Merge order: **C first**, then **A**, B, D, E (see [README](README.md#shared-files-and-merge-order)). Pull main after every merge announcement.
 
@@ -384,7 +408,8 @@ If every test fails with "uninitialized constant Donor" or "Missing model class 
 | `ActionController::ParameterMissing: donor_profile` | Form fields not named `donor_profile[...]` | Use `form_with model: donor_profile` and `f.` helpers, not plain `text_field_tag` |
 | Errors never show; nothing happens (browser console: "Form responses must redirect to another location") | Missing `status: :unprocessable_entity` (Turbo ignores a 200 after a form post) | Add the status to `render :new` / `render :edit` |
 | Two messages for an empty blood group ("can't be blank" and "is not included") | Both presence and inclusion fail on blank | Expected; fine for today |
-| `undefined local variable 'donor_profile'` in `_form` | Rendered the partial without the local | `render "form", donor_profile: @donor_profile` |
+| `undefined local variable 'donor_profile'` or `'button'` in `_form` | Rendered the partial without a local | `render "form", donor_profile: @donor_profile, button: "Save profile"` (or `"Update profile"` on edit) |
+| Form looks unstyled, or fields run together | Missing or misspelled component class | Check `form-field`, `form-errors`, `btn btn-primary` against [UI_DESIGN.md](../UI_DESIGN.md#components); do not add your own CSS |
 | User's old profile disappeared after submitting the new form | `create` has no guard, so `build_donor_profile` replaced it | Add the "already has a profile" check at the top of `create` |
 | `ActiveRecord::RecordNotUnique` | Saved without the uniqueness validation | Add `validates :user_id, uniqueness: true` |
 | Checkbox appears on the new page | Missing `persisted?` check | Wrap it in `<% if donor_profile.persisted? %>` |

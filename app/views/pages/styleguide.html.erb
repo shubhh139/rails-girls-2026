@@ -1,0 +1,83 @@
+<%# Every component class from UI_DESIGN.md, with made-up data. Open /styleguide while you build,
+    and copy the HTML you need into your own view. Nothing here touches the database. %>
+
+<h1 class="page-title">Style guide</h1>
+<p class="meta">Every class you can use in your views. See UI_DESIGN.md for when to use each one.</p>
+
+<h2>Flash messages <span class="meta">(the layout shows these for you)</span></h2>
+<div class="flash flash-notice">Request posted.</div>
+<div class="flash flash-alert">You cannot respond to your own request.</div>
+
+<h2>Buttons</h2>
+<p>
+  <%= link_to "Request blood", "#", class: "btn btn-primary" %>
+  <%= link_to "Become a donor", "#", class: "btn" %>
+</p>
+
+<h2>Filter bar</h2>
+<form class="filter-bar" action="#" method="get">
+  <%= label_tag :blood_group, "Blood group" %>
+  <%= select_tag :blood_group, options_for_select(%w[A+ A- B+ B- AB+ AB- O+ O-]), include_blank: "All" %>
+  <%= label_tag :city, "City" %>
+  <%= select_tag :city, options_for_select(%w[Pune Mumbai Nashik Nagpur Kolhapur]), include_blank: "All" %>
+  <%= submit_tag "Filter", class: "btn", name: nil %>
+</form>
+
+<h2>Cards with a badge</h2>
+<div class="card-list">
+  <div class="card">
+    <span class="badge">O+</span> Asha Kulkarni
+    <p class="meta">Pune</p>
+  </div>
+  <div class="card">
+    <span class="badge">A-</span> Meera Joshi
+    <p class="meta">Nashik</p>
+  </div>
+</div>
+
+<h2>A whole card as a link</h2>
+<div class="card-list">
+  <%= link_to "#", class: "card" do %>
+    <span class="badge">B+</span> 2 units · Sahyadri Hospital, Pune
+    <p class="meta">Needed by 12 Oct 2026 · View ›</p>
+  <% end %>
+</div>
+
+<h2>Empty state</h2>
+<div class="empty-state">
+  <p>No donors match this filter.</p>
+  <%= link_to "Clear filter", "#" %>
+</div>
+
+<h2>Form with errors</h2>
+<form action="#" method="get">
+  <div class="form-errors">
+    <ul>
+      <li>Phone can't be blank</li>
+      <li>Blood group is not included in the list</li>
+    </ul>
+  </div>
+
+  <div class="form-field">
+    <%= label_tag :example_blood_group, "Blood group" %>
+    <%= select_tag :example_blood_group, options_for_select(%w[A+ A- B+ B- AB+ AB- O+ O-]), include_blank: "Select" %>
+  </div>
+
+  <div class="form-field">
+    <%= label_tag :example_phone, "Phone" %>
+    <%= telephone_field_tag :example_phone %>
+    <p class="meta">Shown only to people whose request you respond to.</p>
+  </div>
+
+  <div class="form-field">
+    <%= label_tag :example_note, "Note (optional)" %>
+    <%= text_area_tag :example_note %>
+  </div>
+
+  <div class="form-field">
+    <%= check_box_tag :example_available, "1", true %>
+    <%= label_tag :example_available, "I am available to donate" %>
+  </div>
+
+  <%= submit_tag "Save profile", class: "btn btn-primary", name: nil %>
+</form>

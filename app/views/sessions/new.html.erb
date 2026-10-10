@@ -1,0 +1,17 @@
+<h1 class="page-title">Log in</h1>
+
+<%= form_with url: session_path do |f| %>
+  <div class="form-field">
+    <%= f.label :email_address, "Email" %>
+    <%= f.email_field :email_address, required: true, autofocus: true, autocomplete: "username", value: params[:email_address] %>
+  </div>
+
+  <div class="form-field">
+    <%= f.label :password %>
+    <%= f.password_field :password, required: true, autocomplete: "current-password" %>
+  </div>
+
+  <%= f.submit "Log in", class: "btn btn-primary" %>
+<% end %>
+
+<p>New here? <%= link_to "Sign up", new_registration_path %></p>

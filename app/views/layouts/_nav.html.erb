@@ -1,0 +1,18 @@
+<nav class="site-nav" aria-label="Main">
+  <div class="site-nav-inner">
+    <%= link_to "Blood Donor Connect", root_path, class: "site-name" %>
+
+    <div class="site-nav-links">
+      <% if signed_in? %>
+        <%= link_to "Requests", blood_requests_path %>
+        <%= link_to "Donors", donors_path %>
+        <%= link_to "Request blood", new_blood_request_path %>
+        <%= link_to "My profile", Current.user.donor_profile ? edit_donor_profile_path : new_donor_profile_path %>
+        <%= button_to "Log out", session_path, method: :delete, class: "nav-button" %>
+      <% else %>
+        <%= link_to "Log in", new_session_path %>
+        <%= link_to "Sign up", new_registration_path %>
+      <% end %>
+    </div>
+  </div>
+</nav>

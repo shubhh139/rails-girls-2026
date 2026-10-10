@@ -4,7 +4,7 @@ Oct 10, 2026 · Vishwajeetsingh Desurkar
 
 One tech spec per module: what you build, the Rails concepts behind it, the code you should end up with, and how to check and explain it.
 
-See also: [MVC_GUIDE.md](../MVC_GUIDE.md) (read first), [ATTENDEE_TASKS.md](../ATTENDEE_TASKS.md), [DB_SCHEMA.md](../DB_SCHEMA.md), [PRD.md](../PRD.md).
+See also: [MVC_GUIDE.md](../MVC_GUIDE.md) (read first), [ATTENDEE_TASKS.md](../ATTENDEE_TASKS.md), [DB_SCHEMA.md](../DB_SCHEMA.md), [UI_DESIGN.md](../UI_DESIGN.md) (screens and CSS classes), [PRD.md](../PRD.md).
 
 ## The specs
 
@@ -38,11 +38,10 @@ All five specs depend on these. Mentors set them up before the day. If something
 
 ### Routes
 
-Written by mentors in `config/routes.rb`, under the routes the authentication generator added (`resource :session`, `resources :passwords`) and the sign-up route (`resources :users, only: [ :new, :create ]`). Nobody edits this file during the build.
+Written by mentors in `config/routes.rb`, under the home, style guide, login (`resource :session, only: [ :new, :create, :destroy ]`) and sign-up (`resource :registration, only: [ :new, :create ]`) routes. Nobody edits this file during the build.
 
 ```ruby
 # config/routes.rb
-root "home#index"
 resource  :donor_profile, only: [ :new, :create, :edit, :update ]   # Module A
 resources :donors, only: [ :index ]                                   # Module B
 resources :blood_requests, only: [ :index, :show, :new, :create ] do  # Modules C and D
@@ -67,11 +66,12 @@ end
 
 | What | Where | Used by |
 | --- | --- | --- |
-| `Current.user`, the logged-in user | Rails 8 authentication generator | All |
-| Login required on every page | `Authentication` concern in `ApplicationController` | All |
+| `Current.user`, the logged-in user; `signed_in?` in views | The app's login: `ApplicationController` (user id in the session cookie), `app/models/current.rb` | All |
+| Login required on every page (signed-out visitors go to `/session/new`) | `ApplicationController` (`require_login`; opt out with `allow_unauthenticated_access`) | All |
 | `BLOOD_GROUPS = %w[A+ A- B+ B- AB+ AB- O+ O-].freeze` | `config/initializers/constants.rb` | A, B, C, D |
 | `CITIES = %w[Pune Mumbai Nashik Nagpur Kolhapur].freeze` | `config/initializers/constants.rb` | A, B, C, D |
-| Flash messages (`notice` and `alert`) shown on every page | `app/views/layouts/application.html.erb`, added by a mentor | All |
+| Layout: nav, flash (`.flash.flash-notice`, `.flash.flash-alert`), `.container`, demo footer | `app/views/layouts/application.html.erb`, added by a mentor | All |
+| Component classes (`page-title`, `card`, `card-list`, `btn`, `btn-primary`, `form-field`, `form-errors`, `filter-bar`, `badge`, `meta`, `empty-state`) | `app/assets/stylesheets/application.css`, added by a mentor; listed in [UI_DESIGN.md](../UI_DESIGN.md#components) | All |
 | `User` associations (`has_one :donor_profile`, `has_many :blood_requests`, `has_many :responses, foreign_key: :donor_id`) | `app/models/user.rb`, added by a mentor | All |
 
 ### Coding conventions
@@ -79,7 +79,9 @@ end
 - Strong parameters use Rails 8 `params.expect(...)`.
 - A failed save re-renders the form with `status: :unprocessable_entity`; a successful save redirects with a `notice:`.
 - Partials get their data through locals (`render "responses/list", blood_request: @blood_request`), not instance variables.
-- Phone numbers never appear on list pages. A donor's phone appears only in a request's responses list, seen only by the request's creator. The requester's own `contact_phone` appears on the request page (login required), never on lists.
+- Phone numbers appear in exactly one place: a request's responses list, seen only by the request's creator. The requester's `contact_phone` is stored but not displayed in this PoC.
+- Views use only the component classes from [UI_DESIGN.md](../UI_DESIGN.md#components). No Tailwind utility classes, no inline styles, no new CSS. One `<h1 class="page-title">` per page; partials use `<h2>`.
+- Forms: errors in one `.form-errors` box at the top, each label and input in a `.form-field`, one `btn btn-primary` submit with a verb ("Post request", not "Submit").
 - Generated `belongs_to` lines stay: `rails g model ... user:references` already writes `belongs_to :user`, and `donor:references` writes `belongs_to :donor`, which Module E completes with `class_name: "User"`.
 - Partials on the request page (D and E) may run one short query on their `blood_request` local, because the page's controller action belongs to Module C. Prefer a named model method, and do not let an AI move these queries into `show`.
 
@@ -89,11 +91,13 @@ end
 
 ```erb
 <%# ===== Modules D and E: add your render lines below. Do not edit above this line. ===== %>
-<%# Module D: render "blood_requests/matching_donors", blood_request: @blood_request %>
 <%# Module E: render "responses/button", blood_request: @blood_request %>
 <%# Module E: render "responses/list", blood_request: @blood_request %>
+<%# Module D: render "blood_requests/matching_donors", blood_request: @blood_request %>
 <%# ===== end of shared spot ===== %>
 ```
+
+The order follows screen 7 in UI_DESIGN.md: the "I can help" button, then the responses list, then matching donors.
 
 Modules D and E build their partials on their own branches. Each module turns only its own commented lines into real `render` calls, once Module C's page is on `main` (and, for D, once `DonorProfile.matching` is on `main` too). Module C never uncomments another module's line: if that partial is not merged yet, the request page crashes. If D3 is cut, its line stays commented.
 
@@ -111,17 +115,18 @@ Suggested merge order at 1:30: **C first** (others build on the request page), t
 
 ## Mentor checklist before the day
 
-The specs rely on all of these. TASKS.md P2–P5 and W1 cover them.
+All done on `main`; see the [README](../README.md#what-mentors-have-set-up) for what each piece is and where it lives.
 
-| # | What | Where | Task |
+| # | What | Task | Status |
 | --- | --- | --- | --- |
-| 1 | Authentication generator, plus a sign-up page that collects `name`: `UsersController` `new`/`create` with `allow_unauthenticated_access` and `start_new_session_for`, its view, and `resources :users, only: [ :new, :create ]` | `app/controllers/users_controller.rb`, `app/views/users/` | P2 |
-| 2 | `validates :name, presence: true` on User | `app/models/user.rb` | P2 |
-| 3 | Layout prints `notice` and `alert`; remove the flash blocks the auth generator puts in `sessions/new.html.erb` and the passwords views, so messages do not show twice; remove `flex` from the generated `<main class="container mx-auto mt-28 px-5 flex">`, or pages A, B and D sit side by side in one row | `app/views/layouts/application.html.erb` | P3 |
-| 4 | Nav links: Become a donor (`new_donor_profile_path`), Donors, Requests, Request blood, Log out | Layout | P3 |
-| 5 | `HomeController#index` and `app/views/home/index.html.erb` for `root "home#index"`; routes from this file; and empty actions: `donor_profiles` (new, create, edit, update), `donors#index`, `blood_requests` (index, show, new, create), `responses#create` | `config/routes.rb`, `app/controllers/` | P3 |
-| 6 | `BLOOD_GROUPS` and `CITIES` | `config/initializers/constants.rb` | P4 |
-| 7 | Tailwind is the CSS choice (already in the Gemfile) | | P1 |
-| 8 | `User` associations, right after the tables exist; announce "pull main" | `app/models/user.rb` | W1 |
-| 9 | Optional: enable Minitest **before** running the authentication generator (uncomment `rails/test_unit/railtie` in `config/application.rb`, add `test/test_helper.rb`), so the generator also creates `test/fixtures/users.yml` and the `sign_in_as` helper, and fix the fixtures generated at W1. The specs' test examples are optional and skipped without this. | `test/` | P1 / W1 |
-| 10 | Seeds: every user has a name; made-up phones; a couple of `available: false` donors; donor/request pairs with the same blood group and city, so D3 shows matches; future `needed_by` dates | `db/seeds.rb` | P5 |
+| 1 | Login without the generator: `has_secure_password`, session-cookie login at `/session/new`, log out, sign-up at `/registration/new` (collects name, logs in, opens the donor profile form) | P2 | Done |
+| 2 | `validates :name, presence: true` and the `User` associations | P2 / W1 | Done |
+| 3 | Tailwind removed; shared stylesheet with tokens and every component class | P3 | Done |
+| 4 | Layout: nav (signed-in and signed-out links, "My profile" target, Log out button), flash, `.container`, demo footer | P3 | Done |
+| 5 | Home page (screen 1), styled log-in and sign-up pages (screen 2), `/styleguide` | P3 | Done |
+| 6 | Routes from this file; controllers with empty actions; placeholder views | P3 | Done |
+| 7 | `BLOOD_GROUPS` and `CITIES` in `config/initializers/constants.rb` | P4 | Done |
+| 8 | Tables and migrations (walk through them at 0:00 instead of creating them live) | W1 | Done |
+| 9 | Seeds: named users with password "password", 2 unavailable donors, matching donor/request pairs, future dates, made-up phones | P5 | Done |
+
+There is no test suite: Minitest is not enabled, and the specs check everything by hand (console and browser).

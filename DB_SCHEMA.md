@@ -1,16 +1,15 @@
 # Blood Donor Connect — database schema
 
-Five tables. `users` and `sessions` come from the Rails 8 authentication generator; `donor_profiles`, `blood_requests` and `responses` are created live by a mentor in the first 20 minutes of the build.
+Four tables: `users`, `donor_profiles`, `blood_requests` and `responses`. All four migrations are already in `db/migrate/` and loaded with seed data (`bin/rails db:seed`). Login is the app's own (`has_secure_password` plus the session cookie), so there is no `sessions` table. In the first 20 minutes a mentor walks through the migrations and `db/schema.rb` on the projector instead of creating them live.
 
 After that, `db/schema.rb` is the source of truth. If this file and `db/schema.rb` disagree, `db/schema.rb` is right and this file needs updating.
 
-See also: [PRD.md](PRD.md), [ATTENDEE_TASKS.md](ATTENDEE_TASKS.md), [TASKS.md](TASKS.md), [MVC_GUIDE.md](MVC_GUIDE.md).
+See also: [PRD.md](PRD.md), [ATTENDEE_TASKS.md](ATTENDEE_TASKS.md), [TASKS.md](TASKS.md), [MVC_GUIDE.md](MVC_GUIDE.md), [UI_DESIGN.md](UI_DESIGN.md).
 
 ## Diagram
 
 ```mermaid
 erDiagram
-    users ||--o{ sessions : "has many"
     users ||--o| donor_profiles : "has one"
     users ||--o{ blood_requests : "posts"
     users ||--o{ responses : "responds as donor"
@@ -21,12 +20,6 @@ erDiagram
         string email_address UK
         string password_digest
         string name
-    }
-    sessions {
-        integer id PK
-        integer user_id FK
-        string ip_address
-        string user_agent
     }
     donor_profiles {
         integer id PK
@@ -62,25 +55,14 @@ Every table also has `created_at` and `updated_at`.
 
 ### users
 
-Created by the authentication generator. `name` is added by a mentor.
+Created by `db/migrate/*_create_users.rb`. Passwords are stored by `has_secure_password` in `password_digest`.
 
 | Column | Type | Null | Default | Notes |
 | --- | --- | --- | --- | --- |
 | id | integer | no | | primary key |
 | email_address | string | no | | unique index |
-| password_digest | string | no | | set by `has_secure_password` |
-| name | string | yes | | required by a model validation, not by the database |
-
-### sessions
-
-Created by the authentication generator. Nobody edits this table.
-
-| Column | Type | Null | Default | Notes |
-| --- | --- | --- | --- | --- |
-| id | integer | no | | primary key |
-| user_id | integer | no | | foreign key to `users` |
-| ip_address | string | yes | | |
-| user_agent | string | yes | | |
+| password_digest | string | no | | set by `has_secure_password`, never shown |
+| name | string | no | | also validated in `User` |
 
 ### donor_profiles (Modules A and B)
 
@@ -130,18 +112,22 @@ BLOOD_GROUPS = %w[A+ A- B+ B- AB+ AB- O+ O-].freeze
 CITIES = %w[Pune Mumbai Nashik Nagpur Kolhapur].freeze
 ```
 
+They live in `config/initializers/constants.rb`.
+
 Both are stored as plain strings. The database does not check them; the model validations do.
 
-## Commands for the mentor (0:00 - 0:20)
+## Commands used to create the tables
+
+These have already been run; they are here so you can see where each migration came from.
 
 ```bash
-bin/rails generate migration AddNameToUsers name:string
+bin/rails generate model User name:string email_address:string:uniq password_digest:string
 bin/rails generate model DonorProfile user:references blood_group:string city:string phone:string available:boolean
 bin/rails generate model BloodRequest user:references patient_name:string blood_group:string units_needed:integer hospital:string city:string needed_by:date contact_phone:string note:text
 bin/rails generate model Response blood_request:references donor:references note:text
 ```
 
-Edit the three `create_*` migrations before running `bin/rails db:migrate`. The generators do not add these on their own:
+The generated migrations were then edited before `bin/rails db:migrate`, because the generators do not add these on their own (`create_users` also got `null: false` on both columns):
 
 ```ruby
 # create_donor_profiles

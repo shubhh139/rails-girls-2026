@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 class DonorProfilesController < ApplicationController
   before_action :set_donor_profile, only: [:edit, :update]
 
@@ -46,3 +47,19 @@ class DonorProfilesController < ApplicationController
     params.expect(donor_profile: [:blood_group, :city, :phone, :available])
   end
 end
+=======
+# Module A: Donor profile. See specs/module-a-donor-profile.md.
+class DonorProfilesController < ApplicationController
+  def new
+  end
+
+  def create
+  end
+
+  def edit
+  end
+
+  def update
+  end
+end
+>>>>>>> main

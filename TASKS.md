@@ -2,7 +2,7 @@
 
 Every task for the session, mentors included. Time blocks are hours:minutes from the start of build time.
 
-See also: [PRD.md](PRD.md), [ATTENDEE_TASKS.md](ATTENDEE_TASKS.md) and [MVC_GUIDE.md](MVC_GUIDE.md).
+See also: [PRD.md](PRD.md), [ATTENDEE_TASKS.md](ATTENDEE_TASKS.md) [MVC_GUIDE.md](MVC_GUIDE.md) and [UI_DESIGN.md](UI_DESIGN.md).
 
 - **Who:** Attendee = she builds it herself with AI help; Attendee + mentor = a mentor sits with her; Mentor = mentor builds it.
 - **If behind:** Cut first = drop it at the 1:30 checkpoint if not started; Mentor takes over = mentor builds it while the attendee watches and explains it back; Keep = attendee finishes it.
@@ -13,11 +13,11 @@ See also: [PRD.md](PRD.md), [ATTENDEE_TASKS.md](ATTENDEE_TASKS.md) and [MVC_GUID
 
 | ID | Owner | Task | Who | Depends on | Time | Done when | If behind |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| P1 | Mentor 1 | Create Rails 8 app, push to GitHub, add all 7 collaborators; optionally enable Minitest before P2 (see specs/README.md, mentor checklist) | Mentor |  | Before the day | Everyone can clone and run bin/dev | Keep |
-| P2 | Mentor 1 | Run authentication generator; add a sign-up page that collects name (UsersController, view, `resources :users, only: [ :new, :create ]`); add `validates :name, presence: true` to User | Mentor | P1 | Before the day | A new user can sign up with a name, log in and log out | Keep |
-| P3 | Mentor 2 | Add layout that prints `notice` and `alert` (remove the auth generator's duplicate flash markup in the sessions and passwords views, and remove `flex` from `<main>`), HomeController for the root page, nav bar (Become a donor, Donors, Requests, Request blood, Log out), home page with demo disclaimer; add the routes from specs/README.md and controllers with empty actions for each module | Mentor | P1 | Before the day | Home page loads; flash shows once; nobody needs to edit config/routes.rb | Keep |
+| P1 | Mentor 1 | Create Rails 8 app, push to GitHub, add all 7 collaborators; no test suite | Mentor |  | Before the day | Everyone can clone and run bin/dev | Keep |
+| P2 | Mentor 1 | Add login without the generator: `has_secure_password` on User, session-cookie login at `/session/new`, log out, and a sign-up page that collects name (RegistrationsController, `resource :registration, only: [ :new, :create ]`, logs in and opens the new donor profile form; both pages styled per UI_DESIGN.md screen 2); add `validates :name, presence: true` to User | Mentor | P1 | Before the day | A new user can sign up with a name, log in and log out | Keep |
+| P3 | Mentor 2 | UI setup per UI_DESIGN.md and the specs/README.md UI checklist: remove Tailwind or switch it to `@apply`; shared stylesheet with tokens and component classes; layout with nav (Requests, Donors, Request blood, My profile, Log out), flash and demo footer (remove the auth generator's duplicate flash markup); PagesController home page (screen 1); add the routes from specs/README.md and controllers with empty actions for each module | Mentor | P1 | Before the day | Home page matches screen 1; every component class renders; flash shows once; nobody needs to edit config/routes.rb | Keep |
 | P4 | Mentor 2 | Add BLOOD_GROUPS constant and CITIES list in `config/initializers/constants.rb` | Mentor | P1 | Before the day | Both lists usable in any model or form | Keep |
-| W1 | Mentor 1 | Create all three tables (donor_profiles, blood_requests, responses) live on the projector, explaining each column; add the `User` associations from DB_SCHEMA.md; everyone pulls and migrates | Mentor | P2, P4 | 0:00 - 0:20 | Every attendee has all three tables locally and can name the columns her module uses | Keep |
+| W1 | Mentor 1 | Walk through all four tables (users, donor_profiles, blood_requests, responses) and their migrations on the projector, explaining each column and the `User` associations; everyone pulls and runs `bin/rails db:reset` | Mentor | P2, P4 | 0:00 - 0:20 | Every attendee has all three tables locally and can name the columns her module uses | Keep |
 | P5 | Mentor 2 | Write seed data: 15 named donors (a couple with available false), 6 requests with future dates, some sharing blood group and city with donors so matching donors shows results; made-up phones only | Mentor | W1 | 0:20 - 1:30 | bin/rails db:seed fills every screen | Keep |
 
 ## A. Donor profile
